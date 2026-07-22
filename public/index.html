@@ -1,0 +1,541 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Planning Poker</title>
+<style>
+  :root {
+    --bg: #f4f5f7;
+    --surface: #ffffff;
+    --border: #e4e6eb;
+    --text: #1c1e21;
+    --muted: #6b7280;
+    --accent: #3b5bdb;
+    --accent-soft: #eef1fd;
+    --green: #2f9e6b;
+    --radius: 12px;
+    --shadow: 0 1px 3px rgba(0,0,0,.06), 0 1px 2px rgba(0,0,0,.04);
+  }
+  * { box-sizing: border-box; }
+  html, body { height: 100%; }
+  body {
+    margin: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    -webkit-font-smoothing: antialiased;
+  }
+  button { font-family: inherit; cursor: pointer; }
+  .hidden { display: none !important; }
+
+  /* ---------- Landing ---------- */
+  .landing {
+    min-height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+  }
+  .card-panel {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    padding: 32px;
+    width: 100%;
+    max-width: 400px;
+  }
+  .card-panel h1 {
+    margin: 0 0 4px;
+    font-size: 22px;
+    font-weight: 650;
+  }
+  .card-panel p.sub { margin: 0 0 24px; color: var(--muted); font-size: 14px; }
+  label { display: block; font-size: 13px; font-weight: 550; margin: 14px 0 6px; }
+  input[type=text] {
+    width: 100%;
+    padding: 10px 12px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    font-size: 14px;
+    background: #fff;
+    outline: none;
+  }
+  input[type=text]:focus { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }
+  .check { display: flex; align-items: center; gap: 8px; margin-top: 14px; font-size: 14px; color: var(--muted); cursor: pointer; }
+  .btn {
+    width: 100%;
+    margin-top: 22px;
+    padding: 11px 14px;
+    border: none;
+    border-radius: 8px;
+    background: var(--accent);
+    color: #fff;
+    font-size: 15px;
+    font-weight: 600;
+  }
+  .btn:hover { background: #2f4bc4; }
+  .btn.secondary { background: var(--surface); color: var(--text); border: 1px solid var(--border); }
+  .btn.secondary:hover { background: #f7f8fa; }
+
+  /* ---------- Room ---------- */
+  .room { display: none; flex-direction: column; min-height: 100%; }
+  header.bar {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 12px 20px;
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+  }
+  .bar .brand { font-weight: 650; font-size: 15px; }
+  .bar .topic {
+    flex: 1;
+    border: 1px solid transparent;
+    border-radius: 8px;
+    padding: 6px 10px;
+    font-size: 14px;
+    color: var(--muted);
+    background: transparent;
+    max-width: 460px;
+  }
+  .bar .topic:hover { border-color: var(--border); }
+  .bar .topic:focus { border-color: var(--accent); background: #fff; color: var(--text); outline: none; }
+  .bar .room-code { font-size: 13px; color: var(--muted); }
+  .bar .room-code b { color: var(--text); }
+  .icon-btn {
+    border: 1px solid var(--border);
+    background: var(--surface);
+    border-radius: 8px;
+    padding: 7px 12px;
+    font-size: 13px;
+    font-weight: 550;
+    color: var(--text);
+  }
+  .icon-btn:hover { background: #f7f8fa; }
+
+  main.table-wrap {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 32px 20px 20px;
+    gap: 28px;
+  }
+  .members {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 16px;
+    justify-content: center;
+    max-width: 720px;
+  }
+  .seat { display: flex; flex-direction: column; align-items: center; gap: 8px; width: 76px; }
+  .seat .pip {
+    width: 52px; height: 70px;
+    border-radius: 10px;
+    border: 1.5px solid var(--border);
+    background: var(--surface);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 20px; font-weight: 650;
+    box-shadow: var(--shadow);
+    transition: transform .18s ease, border-color .18s, background .18s;
+  }
+  .seat .pip.voted { border-color: var(--accent); background: var(--accent-soft); }
+  .seat .pip.revealed { background: var(--surface); border-color: var(--border); color: var(--text); }
+  .seat .pip.spectator { border-style: dashed; background: transparent; color: var(--muted); font-size: 13px; }
+  .seat .name { font-size: 12.5px; color: var(--muted); text-align: center; max-width: 76px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .seat .name.me { color: var(--text); font-weight: 600; }
+
+  .table-center {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    padding: 14px 30px;
+    box-shadow: var(--shadow);
+    display: flex; align-items: center; gap: 16px;
+    min-height: 56px;
+  }
+  .table-center .status { font-size: 14px; color: var(--muted); }
+  .table-center .stat { font-size: 14px; }
+  .table-center .stat b { font-size: 16px; }
+  .table-center .consensus { color: var(--green); font-weight: 600; }
+  .action {
+    border: none; border-radius: 8px; padding: 9px 18px;
+    font-size: 14px; font-weight: 600; background: var(--accent); color: #fff;
+  }
+  .action:hover { background: #2f4bc4; }
+  .action.ghost { background: var(--accent-soft); color: var(--accent); }
+  .action.ghost:hover { background: #e2e8fb; }
+
+  /* ---------- Deck ---------- */
+  footer.deck {
+    padding: 20px;
+    background: var(--surface);
+    border-top: 1px solid var(--border);
+  }
+  .deck-inner { max-width: 760px; margin: 0 auto; }
+  .deck-label { font-size: 12px; color: var(--muted); text-align: center; margin-bottom: 12px; letter-spacing: .02em; }
+  .deck-cards { display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; }
+  .pcard {
+    width: 52px; height: 74px;
+    border-radius: 10px;
+    border: 1.5px solid var(--border);
+    background: var(--surface);
+    color: var(--text);
+    font-size: 18px; font-weight: 650;
+    display: flex; align-items: center; justify-content: center;
+    transition: transform .12s ease, border-color .12s, background .12s, color .12s;
+  }
+  .pcard:hover { transform: translateY(-6px); border-color: var(--accent); }
+  .pcard.selected { background: var(--accent); border-color: var(--accent); color: #fff; transform: translateY(-8px); }
+  .spectator-note { text-align: center; color: var(--muted); font-size: 14px; }
+
+  /* ---------- Modal ---------- */
+  .modal-back {
+    position: fixed; inset: 0; background: rgba(20,22,28,.4);
+    display: flex; align-items: center; justify-content: center; padding: 20px; z-index: 50;
+  }
+  .modal { background: var(--surface); border-radius: var(--radius); box-shadow: 0 10px 40px rgba(0,0,0,.2); padding: 24px; width: 100%; max-width: 420px; }
+  .modal h2 { margin: 0 0 6px; font-size: 17px; }
+  .modal p { margin: 0 0 16px; color: var(--muted); font-size: 13.5px; }
+  .modal textarea {
+    width: 100%; min-height: 72px; resize: vertical;
+    border: 1px solid var(--border); border-radius: 8px; padding: 10px 12px;
+    font-family: inherit; font-size: 14px; outline: none;
+  }
+  .modal textarea:focus { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }
+  .presets { display: flex; flex-wrap: wrap; gap: 8px; margin: 12px 0; }
+  .preset { border: 1px solid var(--border); background: #fff; border-radius: 999px; padding: 6px 12px; font-size: 12.5px; color: var(--muted); }
+  .preset:hover { border-color: var(--accent); color: var(--accent); }
+  .modal-actions { display: flex; gap: 10px; margin-top: 18px; }
+  .modal-actions .btn { margin-top: 0; }
+
+  .toast {
+    position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%);
+    background: #1c1e21; color: #fff; padding: 10px 18px; border-radius: 8px; font-size: 13.5px;
+    opacity: 0; transition: opacity .25s; pointer-events: none; z-index: 60;
+  }
+  .toast.show { opacity: 1; }
+</style>
+</head>
+<body>
+
+<!-- Landing -->
+<div class="landing" id="landing">
+  <div class="card-panel">
+    <h1>Planning Poker</h1>
+    <p class="sub">Estimate together. No sign-up, no clutter.</p>
+
+    <label for="name">Your name</label>
+    <input type="text" id="name" placeholder="e.g. Bilel" maxlength="40" autocomplete="off" />
+
+    <label for="roomInput">Room</label>
+    <input type="text" id="roomInput" placeholder="Room code (blank = new room)" maxlength="64" autocomplete="off" />
+
+    <label class="check">
+      <input type="checkbox" id="spectator" /> Join as spectator (watch, don't vote)
+    </label>
+
+    <button class="btn" id="enterBtn">Enter room</button>
+  </div>
+</div>
+
+<!-- Room -->
+<div class="room" id="room">
+  <header class="bar">
+    <span class="brand">♠ Planning Poker</span>
+    <input class="topic" id="topicInput" placeholder="What are we estimating? (click to set a topic)" maxlength="120" />
+    <span class="room-code">Room <b id="roomCode"></b></span>
+    <button class="icon-btn" id="scaleBtn">Scale</button>
+    <button class="icon-btn" id="specToggle">Spectate</button>
+    <button class="icon-btn" id="inviteBtn">Invite</button>
+  </header>
+
+  <main class="table-wrap">
+    <div class="members" id="members"></div>
+
+    <div class="table-center" id="center">
+      <span class="status" id="centerStatus">Waiting for votes…</span>
+    </div>
+  </main>
+
+  <footer class="deck">
+    <div class="deck-inner">
+      <div class="deck-label" id="deckLabel">PICK YOUR CARD</div>
+      <div class="deck-cards" id="deckCards"></div>
+    </div>
+  </footer>
+</div>
+
+<!-- Scale modal -->
+<div class="modal-back hidden" id="scaleModal">
+  <div class="modal">
+    <h2>Voting scale</h2>
+    <p>Comma-separated values. Changing the scale clears the current round.</p>
+    <div class="presets" id="presets"></div>
+    <textarea id="scaleInput"></textarea>
+    <div class="modal-actions">
+      <button class="btn secondary" id="scaleCancel">Cancel</button>
+      <button class="btn" id="scaleSave">Save scale</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+(() => {
+  "use strict";
+
+  const PRESETS = {
+    "Fibonacci":      ["0","1","2","3","5","8","13","21","?","☕"],
+    "Modified Fib":   ["0","½","1","2","3","5","8","13","20","40","100","?"],
+    "T-shirt":        ["XS","S","M","L","XL","XXL","?"],
+    "Powers of 2":    ["1","2","4","8","16","32","?"],
+    "Yes / No":       ["👍","👎","?"],
+  };
+
+  const $ = (id) => document.getElementById(id);
+  const landing = $("landing"), roomEl = $("room");
+
+  let ws = null;
+  let me = { name: "", spectator: false };
+  let roomId = "";
+  let myVote = null;
+  let lastRevealed = false;
+
+  // ---- Routing: /room/<id> deep links ----
+  function currentRoomFromUrl() {
+    const m = location.pathname.match(/^\/room\/([A-Za-z0-9_-]{1,64})$/);
+    return m ? m[1] : "";
+  }
+  function randomRoom() {
+    return Math.random().toString(36).slice(2, 8);
+  }
+
+  // Prefill room code if arriving via a shared link.
+  const urlRoom = currentRoomFromUrl();
+  if (urlRoom) $("roomInput").value = urlRoom;
+
+  // ---- Landing ----
+  $("enterBtn").addEventListener("click", enter);
+  $("name").addEventListener("keydown", (e) => { if (e.key === "Enter") enter(); });
+  $("roomInput").addEventListener("keydown", (e) => { if (e.key === "Enter") enter(); });
+
+  function enter() {
+    const name = $("name").value.trim();
+    if (!name) { $("name").focus(); return; }
+    me.name = name;
+    me.spectator = $("spectator").checked;
+    roomId = ($("roomInput").value.trim() || randomRoom());
+    history.replaceState(null, "", "/room/" + roomId);
+    connect();
+  }
+
+  // ---- WebSocket ----
+  function connect() {
+    const proto = location.protocol === "https:" ? "wss" : "ws";
+    ws = new WebSocket(`${proto}://${location.host}/api/room/${roomId}/ws`);
+
+    ws.addEventListener("open", () => {
+      landing.style.display = "none";
+      roomEl.style.display = "flex";
+      $("roomCode").textContent = roomId;
+      send({ type: "join", name: me.name, spectator: me.spectator });
+      updateSpecButton();
+    });
+
+    ws.addEventListener("message", (e) => {
+      const msg = JSON.parse(e.data);
+      if (msg.type === "state") render(msg);
+    });
+
+    ws.addEventListener("close", () => {
+      toast("Disconnected — reconnecting…");
+      setTimeout(connect, 1500);
+    });
+  }
+
+  function send(obj) {
+    if (ws && ws.readyState === WebSocket.OPEN) ws.send(JSON.stringify(obj));
+  }
+
+  // ---- Render ----
+  let currentScale = [];
+
+  function render(s) {
+    currentScale = s.scale;
+
+    // Members / seats
+    const seats = $("members");
+    seats.innerHTML = "";
+    s.members.forEach((m) => {
+      const seat = document.createElement("div");
+      seat.className = "seat";
+
+      const pip = document.createElement("div");
+      pip.className = "pip";
+      if (m.spectator) {
+        pip.classList.add("spectator");
+        pip.textContent = "👁";
+      } else if (s.revealed) {
+        pip.classList.add("revealed");
+        pip.textContent = m.vote !== null ? m.vote : "–";
+      } else if (m.hasVoted) {
+        pip.classList.add("voted");
+        pip.textContent = "✓";
+      } else {
+        pip.textContent = "";
+      }
+
+      const name = document.createElement("div");
+      name.className = "name" + (m.name === me.name ? " me" : "");
+      name.textContent = m.name;
+
+      seat.appendChild(pip);
+      seat.appendChild(name);
+      seats.appendChild(seat);
+    });
+
+    // Topic (don't clobber while user is typing)
+    const topicEl = $("topicInput");
+    if (document.activeElement !== topicEl) topicEl.value = s.topic;
+
+    // Center table
+    const center = $("center");
+    center.innerHTML = "";
+    if (s.revealed) {
+      const wrap = document.createElement("div");
+      wrap.className = "stat";
+      if (s.stats.consensus) {
+        wrap.innerHTML = `<span class="consensus">Consensus 🎉</span>`;
+      } else if (s.stats.average !== null) {
+        wrap.innerHTML = `Average <b>${s.stats.average}</b>`;
+      } else {
+        wrap.textContent = "Votes revealed";
+      }
+      center.appendChild(wrap);
+
+      const reset = document.createElement("button");
+      reset.className = "action";
+      reset.textContent = "New round";
+      reset.onclick = () => send({ type: "reset" });
+      center.appendChild(reset);
+    } else {
+      const status = document.createElement("span");
+      status.className = "status";
+      status.textContent = s.voterCount === 0
+        ? "Waiting for voters…"
+        : `${s.votesIn} / ${s.voterCount} voted`;
+      center.appendChild(status);
+
+      const reveal = document.createElement("button");
+      reveal.className = "action" + (s.votesIn === 0 ? " ghost" : "");
+      reveal.textContent = "Reveal cards";
+      reveal.disabled = s.votesIn === 0;
+      reveal.onclick = () => send({ type: "reveal" });
+      center.appendChild(reveal);
+    }
+
+    // Reset my local selection when a new round starts
+    if (lastRevealed && !s.revealed) myVote = null;
+    lastRevealed = s.revealed;
+
+    renderDeck(s);
+  }
+
+  function renderDeck(s) {
+    const label = $("deckLabel");
+    const deck = $("deckCards");
+    deck.innerHTML = "";
+
+    if (me.spectator) {
+      label.textContent = "SPECTATOR MODE";
+      const note = document.createElement("div");
+      note.className = "spectator-note";
+      note.textContent = "You're watching this round. Switch to voter from the top bar.";
+      deck.appendChild(note);
+      return;
+    }
+
+    label.textContent = s.revealed ? "ROUND REVEALED" : "PICK YOUR CARD";
+    s.scale.forEach((val) => {
+      const c = document.createElement("button");
+      c.className = "pcard" + (myVote === val ? " selected" : "");
+      c.textContent = val;
+      c.disabled = s.revealed;
+      c.onclick = () => {
+        myVote = val;
+        send({ type: "vote", value: val });
+        renderDeck(s);
+      };
+      deck.appendChild(c);
+    });
+  }
+
+  // ---- Top bar actions ----
+  $("topicInput").addEventListener("change", (e) => {
+    send({ type: "set_topic", topic: e.target.value });
+  });
+
+  $("specToggle").addEventListener("click", () => {
+    me.spectator = !me.spectator;
+    if (me.spectator) myVote = null;
+    send({ type: "set_spectator", spectator: me.spectator });
+    updateSpecButton();
+  });
+  function updateSpecButton() {
+    $("specToggle").textContent = me.spectator ? "Become voter" : "Spectate";
+  }
+
+  $("inviteBtn").addEventListener("click", async () => {
+    const url = `${location.origin}/room/${roomId}`;
+    try {
+      await navigator.clipboard.writeText(url);
+      toast("Invite link copied");
+    } catch {
+      prompt("Share this link:", url);
+    }
+  });
+
+  // ---- Scale modal ----
+  const scaleModal = $("scaleModal");
+  $("scaleBtn").addEventListener("click", () => {
+    $("scaleInput").value = currentScale.join(", ");
+    scaleModal.classList.remove("hidden");
+  });
+  $("scaleCancel").addEventListener("click", () => scaleModal.classList.add("hidden"));
+  scaleModal.addEventListener("click", (e) => { if (e.target === scaleModal) scaleModal.classList.add("hidden"); });
+  $("scaleSave").addEventListener("click", () => {
+    const scale = $("scaleInput").value.split(",").map((s) => s.trim()).filter(Boolean);
+    if (scale.length) {
+      send({ type: "set_scale", scale });
+      myVote = null;
+      scaleModal.classList.add("hidden");
+    }
+  });
+
+  const presetsEl = $("presets");
+  Object.entries(PRESETS).forEach(([name, vals]) => {
+    const b = document.createElement("button");
+    b.className = "preset";
+    b.textContent = name;
+    b.onclick = () => { $("scaleInput").value = vals.join(", "); };
+    presetsEl.appendChild(b);
+  });
+
+  // ---- Toast ----
+  let toastTimer = null;
+  function toast(text) {
+    const t = $("toast");
+    t.textContent = text;
+    t.classList.add("show");
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => t.classList.remove("show"), 2200);
+  }
+})();
+</script>
+</body>
+</html>
