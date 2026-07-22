@@ -202,15 +202,28 @@ export class Room implements DurableObject {
     return list;
   }
 
-  private computeStats(voters: Member[]): { average: number | null; consensus: boolean } {
+  private computeStats(
+    voters: Member[],
+  ): { average: number | null; consensus: boolean; distribution: { value: string; count: number }[] } {
     const votesIn = voters.filter((m) => m.vote !== null).length;
     const numeric = voters.map((m) => Number(m.vote)).filter((n) => Number.isFinite(n));
     const average =
       numeric.length > 0 ? numeric.reduce((a, b) => a + b, 0) / numeric.length : null;
-    const cast = voters.filter((m) => m.vote !== null).map((m) => m.vote);
+    const cast = voters.filter((m) => m.vote !== null).map((m) => m.vote as string);
     // True unanimity: at least 2 voters, everyone voted, all the same value.
     const consensus = voters.length > 1 && votesIn === voters.length && new Set(cast).size === 1;
-    return { average, consensus };
+    const distribution = this.tallyVotes(cast, this.room.scale);
+    return { average, consensus, distribution };
+  }
+
+  /** Count occurrences per scale value, sorted by count desc, ties broken by scale order. */
+  private tallyVotes(cast: string[], scale: string[]): { value: string; count: number }[] {
+    const counts = new Map<string, number>();
+    for (const v of cast) counts.set(v, (counts.get(v) ?? 0) + 1);
+    const scaleIndex = new Map(scale.map((v, i) => [v, i]));
+    return [...counts.entries()]
+      .map(([value, count]) => ({ value, count }))
+      .sort((a, b) => b.count - a.count || (scaleIndex.get(a.value) ?? 0) - (scaleIndex.get(b.value) ?? 0));
   }
 
   private clearAllVotes(): void {
@@ -293,13 +306,18 @@ export class Room implements DurableObject {
     const voters = members.filter((m) => !m.spectator);
     const votesIn = voters.filter((m) => m.vote !== null).length;
 
-    let stats: { average: string | null; consensus: boolean } = {
+    let stats: {
+      average: string | null;
+      consensus: boolean;
+      distribution: { value: string; count: number }[];
+    } = {
       average: null,
       consensus: false,
+      distribution: [],
     };
     if (revealed) {
-      const { average, consensus } = this.computeStats(voters);
-      stats = { average: average !== null ? average.toFixed(1) : null, consensus };
+      const { average, consensus, distribution } = this.computeStats(voters);
+      stats = { average: average !== null ? average.toFixed(1) : null, consensus, distribution };
     }
 
     const payload = JSON.stringify({

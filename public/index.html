@@ -228,6 +228,13 @@
   .h-vote { display: inline-flex; align-items: center; gap: 5px; border: 1px solid var(--border); border-radius: 999px; padding: 3px 10px; font-size: 12.5px; background: #fafbfc; }
   .h-vote b { color: var(--accent); }
 
+  /* vote distribution (choice -> count), shown after reveal and in history */
+  .dist-row { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; }
+  .dist-chip { display: inline-flex; align-items: center; gap: 6px; border: 1px solid var(--border); border-radius: 999px; padding: 5px 14px; font-size: 13.5px; background: #fafbfc; }
+  .dist-chip b { color: var(--accent); font-size: 15px; }
+  .dist-chip .n { color: var(--muted); }
+  .h-round .dist-row { justify-content: flex-start; margin-bottom: 8px; }
+
   .toast {
     position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%);
     background: #1c1e21; color: #fff; padding: 10px 18px; border-radius: 8px; font-size: 13.5px;
@@ -332,6 +339,8 @@
     <div class="table-center" id="center">
       <span class="status" id="centerStatus">Waiting for votes…</span>
     </div>
+
+    <div class="dist-row hidden" id="distRow"></div>
   </main>
 
   <footer class="deck">
@@ -584,7 +593,25 @@
       center.appendChild(reveal);
     }
 
+    renderDistribution(s, revealed);
     renderDeck(s, revealed);
+  }
+
+  function renderDistribution(s, revealed) {
+    const row = $("distRow");
+    row.innerHTML = "";
+    const dist = revealed && s.stats.distribution ? s.stats.distribution : [];
+    if (!dist.length) {
+      row.classList.add("hidden");
+      return;
+    }
+    row.classList.remove("hidden");
+    dist.forEach((d) => {
+      const chip = document.createElement("span");
+      chip.className = "dist-chip";
+      chip.innerHTML = `<b>${escapeHtml(d.value)}</b><span class="n">×${d.count}</span>`;
+      row.appendChild(chip);
+    });
   }
 
   function renderDeck(s, revealed) {
@@ -747,6 +774,15 @@
         result.textContent = `${r.voterCount} voters`;
       }
 
+      const dist = document.createElement("div");
+      dist.className = "dist-row";
+      tallyVotes(r.votes, r.scale || []).forEach((d) => {
+        const chip = document.createElement("span");
+        chip.className = "dist-chip";
+        chip.innerHTML = `<b>${escapeHtml(d.value)}</b><span class="n">×${d.count}</span>`;
+        dist.appendChild(chip);
+      });
+
       const votes = document.createElement("div");
       votes.className = "h-votes";
       r.votes.forEach((v) => {
@@ -758,9 +794,20 @@
 
       el.appendChild(top);
       el.appendChild(result);
+      el.appendChild(dist);
       el.appendChild(votes);
       list.appendChild(el);
     });
+  }
+
+  /** Count occurrences per value, sorted by count desc, ties broken by scale order. */
+  function tallyVotes(votes, scale) {
+    const counts = new Map();
+    votes.forEach((v) => counts.set(v.value, (counts.get(v.value) || 0) + 1));
+    const scaleIndex = new Map(scale.map((v, i) => [v, i]));
+    return [...counts.entries()]
+      .map(([value, count]) => ({ value, count }))
+      .sort((a, b) => b.count - a.count || (scaleIndex.get(a.value) ?? 0) - (scaleIndex.get(b.value) ?? 0));
   }
 
   function escapeHtml(s) {
