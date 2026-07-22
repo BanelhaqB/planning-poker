@@ -3,7 +3,8 @@
  *
  *  - /api/room/:id/ws       -> upgrade to WebSocket and hand off to the Room DO
  *  - /api/room/:id/history  -> read past rounds + votes for a room from D1
- *  - everything else         -> serve static assets (the frontend in ./public)
+ *  - /app and /room/:id      -> serve the poker app (app.html)
+ *  - everything else         -> serve static assets (SEO landing at /)
  */
 
 export { Room } from "./room";
@@ -33,7 +34,16 @@ export default {
       return history(histMatch[1], env);
     }
 
-    // Static frontend. Unknown deep links resolve to index.html so /room/<id> works.
+    // The poker app itself lives at /app and /room/<id>; both serve app.html.
+    const isAppRoute =
+      url.pathname === "/app" ||
+      new RegExp(`^/room/(${ROOM_ID})$`).test(url.pathname);
+    if (isAppRoute) {
+      return env.ASSETS.fetch(new Request(new URL("/app.html", url), request));
+    }
+
+    // Everything else -> static assets (SEO landing at /, robots, sitemap, …).
+    // Unknown paths fall back to the landing page.
     const res = await env.ASSETS.fetch(request);
     if (res.status === 404) {
       return env.ASSETS.fetch(new Request(new URL("/", url), request));

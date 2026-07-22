@@ -3,7 +3,83 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>Planning Poker</title>
+
+<!-- ============================================================= -->
+<!-- SEO: replace https://your-domain.com everywhere below with     -->
+<!-- your real domain (also in sitemap.xml and robots.txt).         -->
+<!-- ============================================================= -->
+<title>Free Online Planning Poker — Scrum Estimation, No Sign-up</title>
+<meta name="description" content="Free online planning poker for agile & scrum teams. Create a room, invite your team, vote on story points and reveal together. No sign-up, no ads, open-source." />
+<link rel="canonical" href="https://your-domain.com/" />
+<meta name="robots" content="index, follow" />
+
+<!-- Open Graph -->
+<meta property="og:type" content="website" />
+<meta property="og:site_name" content="Planning Poker" />
+<meta property="og:title" content="Free Online Planning Poker — Scrum Estimation, No Sign-up" />
+<meta property="og:description" content="Create a room, invite your team, vote on story points and reveal together. Free, no sign-up, open-source." />
+<meta property="og:url" content="https://your-domain.com/" />
+<meta property="og:image" content="https://your-domain.com/og-image.png" />
+<meta property="og:image:width" content="1200" />
+<meta property="og:image:height" content="630" />
+
+<!-- Twitter -->
+<meta name="twitter:card" content="summary_large_image" />
+<meta name="twitter:title" content="Free Online Planning Poker — Scrum Estimation" />
+<meta name="twitter:description" content="Create a room, invite your team, vote on story points and reveal together. Free, no sign-up, open-source." />
+<meta name="twitter:image" content="https://your-domain.com/og-image.png" />
+
+<link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+
+<!-- Structured data: the app -->
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "WebApplication",
+  "name": "Planning Poker",
+  "url": "https://your-domain.com/",
+  "applicationCategory": "BusinessApplication",
+  "operatingSystem": "Any (web browser)",
+  "description": "Free online planning poker for agile and scrum teams. Create a room, invite your team, vote on story points and reveal together.",
+  "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" }
+}
+</script>
+
+<!-- Structured data: FAQ -->
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  "mainEntity": [
+    {
+      "@type": "Question",
+      "name": "What is planning poker?",
+      "acceptedAnswer": { "@type": "Answer", "text": "Planning poker (also called scrum poker) is a consensus-based estimation technique used by agile teams. Each member privately picks a card representing their effort estimate for a task, then everyone reveals at once to discuss differences and agree on a number." }
+    },
+    {
+      "@type": "Question",
+      "name": "Is this planning poker tool free?",
+      "acceptedAnswer": { "@type": "Answer", "text": "Yes. It is completely free, with no sign-up, no ads and no tracking. It is also open-source." }
+    },
+    {
+      "@type": "Question",
+      "name": "Do I need to create an account?",
+      "acceptedAnswer": { "@type": "Answer", "text": "No account is required. Create a room, share the link, and your teammates join instantly with just a name." }
+    },
+    {
+      "@type": "Question",
+      "name": "Which estimation scales are supported?",
+      "acceptedAnswer": { "@type": "Answer", "text": "Fibonacci, Fibonacci Lite (1, 3, 5, 8, 13), T-shirt sizes, powers of two and more. You can also enter your own custom scale." }
+    },
+    {
+      "@type": "Question",
+      "name": "Can people watch without voting?",
+      "acceptedAnswer": { "@type": "Answer", "text": "Yes. Anyone can join as a spectator to observe the session without casting a vote, which is handy for facilitators and stakeholders." }
+    }
+  ]
+}
+</script>
+
 <style>
   :root {
     --bg: #f4f5f7;
@@ -14,817 +90,332 @@
     --accent: #3b5bdb;
     --accent-soft: #eef1fd;
     --green: #2f9e6b;
-    --radius: 12px;
+    --radius: 14px;
     --shadow: 0 1px 3px rgba(0,0,0,.06), 0 1px 2px rgba(0,0,0,.04);
+    --shadow-lg: 0 12px 40px rgba(20,22,40,.10);
   }
   * { box-sizing: border-box; }
-  html, body { height: 100%; }
+  html { scroll-behavior: smooth; }
   body {
     margin: 0;
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
     background: var(--bg);
     color: var(--text);
+    line-height: 1.6;
     -webkit-font-smoothing: antialiased;
   }
-  button { font-family: inherit; cursor: pointer; }
-  .hidden { display: none !important; }
+  a { color: var(--accent); text-decoration: none; }
+  a:hover { text-decoration: underline; }
+  .wrap { max-width: 960px; margin: 0 auto; padding: 0 20px; }
 
-  /* ---------- Landing ---------- */
-  .landing {
-    min-height: 100%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    padding: 24px;
-  }
-  .card-panel {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-    box-shadow: var(--shadow);
-    padding: 32px;
-    width: 100%;
-    max-width: 400px;
-  }
-  .card-panel h1 {
-    margin: 0 0 4px;
-    font-size: 22px;
-    font-weight: 650;
-  }
-  .card-panel p.sub { margin: 0 0 24px; color: var(--muted); font-size: 14px; }
-  label { display: block; font-size: 13px; font-weight: 550; margin: 14px 0 6px; }
-  input[type=text] {
-    width: 100%;
-    padding: 10px 12px;
-    border: 1px solid var(--border);
-    border-radius: 8px;
-    font-size: 14px;
-    background: #fff;
-    outline: none;
-  }
-  input[type=text]:focus { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }
-  .check { display: flex; align-items: center; gap: 8px; margin-top: 14px; font-size: 14px; color: var(--muted); cursor: pointer; }
   .btn {
-    width: 100%;
-    margin-top: 22px;
-    padding: 11px 14px;
-    border: none;
-    border-radius: 8px;
-    background: var(--accent);
-    color: #fff;
-    font-size: 15px;
-    font-weight: 600;
+    display: inline-block; border: none; border-radius: 9px; cursor: pointer;
+    padding: 13px 24px; font-size: 15px; font-weight: 650; font-family: inherit;
+    background: var(--accent); color: #fff; text-decoration: none;
   }
-  .btn:hover { background: #2f4bc4; }
+  .btn:hover { background: #2f4bc4; text-decoration: none; }
   .btn.secondary { background: var(--surface); color: var(--text); border: 1px solid var(--border); }
   .btn.secondary:hover { background: #f7f8fa; }
 
-  /* ---------- Room ---------- */
-  .room { display: none; flex-direction: column; min-height: 100%; }
-  header.bar {
-    display: flex;
-    align-items: center;
-    gap: 16px;
-    padding: 12px 20px;
-    background: var(--surface);
-    border-bottom: 1px solid var(--border);
+  /* Header */
+  header.nav {
+    background: var(--surface); border-bottom: 1px solid var(--border);
+    position: sticky; top: 0; z-index: 10;
   }
-  .bar .brand { font-weight: 650; font-size: 15px; }
-  .bar .topic {
-    flex: 1;
-    border: 1px solid transparent;
-    border-radius: 8px;
-    padding: 6px 10px;
-    font-size: 14px;
-    color: var(--muted);
-    background: transparent;
-    max-width: 460px;
-  }
-  .bar .topic:hover { border-color: var(--border); }
-  .bar .topic:focus { border-color: var(--accent); background: #fff; color: var(--text); outline: none; }
-  .bar .room-code { font-size: 13px; color: var(--muted); }
-  .bar .room-code b { color: var(--text); }
-  .icon-btn {
-    border: 1px solid var(--border);
-    background: var(--surface);
-    border-radius: 8px;
-    padding: 7px 12px;
-    font-size: 13px;
-    font-weight: 550;
-    color: var(--text);
-  }
-  .icon-btn:hover { background: #f7f8fa; }
+  .nav-inner { display: flex; align-items: center; gap: 16px; height: 60px; }
+  .nav .brand { font-weight: 700; font-size: 16px; color: var(--text); }
+  .nav .brand span { color: var(--accent); }
+  .nav .spacer { flex: 1; }
+  .nav a.navlink { color: var(--muted); font-size: 14px; font-weight: 550; }
+  .nav a.navlink:hover { color: var(--text); text-decoration: none; }
 
-  main.table-wrap {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    padding: 32px 20px 20px;
-    gap: 28px;
-  }
-  .members {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 16px;
-    justify-content: center;
-    max-width: 720px;
-  }
-  .seat { display: flex; flex-direction: column; align-items: center; gap: 8px; width: 76px; }
-  .seat .pip {
-    width: 52px; height: 70px;
-    border-radius: 10px;
-    border: 1.5px solid var(--border);
-    background: var(--surface);
-    display: flex; align-items: center; justify-content: center;
-    font-size: 20px; font-weight: 650;
-    box-shadow: var(--shadow);
-    transition: transform .18s ease, border-color .18s, background .18s;
-  }
-  .seat .pip.voted { border-color: var(--accent); background: var(--accent-soft); }
-  .seat .pip.revealed { background: var(--surface); border-color: var(--border); color: var(--text); }
-  .seat .pip.spectator { border-style: dashed; background: transparent; color: var(--muted); font-size: 13px; }
-  .seat .pip.flip { transform: rotateY(180deg) scale(1.02); }
-  .seat .name { font-size: 12.5px; color: var(--muted); text-align: center; max-width: 76px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-  .seat .name.me { color: var(--text); font-weight: 600; }
+  /* Hero */
+  .hero { text-align: center; padding: 72px 0 56px; }
+  .hero h1 { font-size: 44px; line-height: 1.12; margin: 0 0 18px; letter-spacing: -.02em; }
+  .hero h1 .grad { color: var(--accent); }
+  .hero p.lead { font-size: 19px; color: var(--muted); max-width: 620px; margin: 0 auto 30px; }
+  .hero .cta { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; }
+  .trust { margin-top: 22px; font-size: 13.5px; color: var(--muted); }
+  .trust b { color: var(--text); font-weight: 600; }
 
-  .table-center {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: 999px;
-    padding: 14px 30px;
-    box-shadow: var(--shadow);
-    display: flex; align-items: center; gap: 16px;
-    min-height: 56px;
+  /* Mock table preview */
+  .preview {
+    margin: 44px auto 0; max-width: 640px; background: var(--surface);
+    border: 1px solid var(--border); border-radius: var(--radius); box-shadow: var(--shadow-lg);
+    padding: 28px; display: flex; flex-direction: column; align-items: center; gap: 20px;
   }
-  .table-center .status { font-size: 14px; color: var(--muted); }
-  .table-center .stat { font-size: 14px; }
-  .table-center .stat b { font-size: 16px; }
-  .table-center .consensus { color: var(--green); font-weight: 600; }
-  .action {
-    border: none; border-radius: 8px; padding: 9px 18px;
-    font-size: 14px; font-weight: 600; background: var(--accent); color: #fff;
+  .seats { display: flex; gap: 14px; flex-wrap: wrap; justify-content: center; }
+  .seat { display: flex; flex-direction: column; align-items: center; gap: 6px; }
+  .seat .card {
+    width: 44px; height: 60px; border-radius: 9px; border: 1.5px solid var(--border);
+    display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 17px;
+    background: var(--surface); box-shadow: var(--shadow);
   }
-  .action:hover { background: #2f4bc4; }
-  .action.ghost { background: var(--accent-soft); color: var(--accent); }
-  .action.ghost:hover { background: #e2e8fb; }
+  .seat .card.up { background: var(--accent-soft); border-color: var(--accent); color: var(--accent); }
+  .seat small { font-size: 11.5px; color: var(--muted); }
+  .preview .result { font-size: 14px; color: var(--green); font-weight: 650; }
 
-  /* ---------- Deck ---------- */
-  footer.deck {
-    padding: 20px;
-    background: var(--surface);
-    border-top: 1px solid var(--border);
-  }
-  .deck-inner { max-width: 760px; margin: 0 auto; }
-  .deck-label { font-size: 12px; color: var(--muted); text-align: center; margin-bottom: 12px; letter-spacing: .02em; }
-  .deck-cards { display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; }
-  .pcard {
-    width: 52px; height: 74px;
-    border-radius: 10px;
-    border: 1.5px solid var(--border);
-    background: var(--surface);
-    color: var(--text);
-    font-size: 18px; font-weight: 650;
-    display: flex; align-items: center; justify-content: center;
-    transition: transform .12s ease, border-color .12s, background .12s, color .12s;
-  }
-  .pcard:hover { transform: translateY(-6px); border-color: var(--accent); }
-  .pcard.selected { background: var(--accent); border-color: var(--accent); color: #fff; transform: translateY(-8px); }
-  .spectator-note { text-align: center; color: var(--muted); font-size: 14px; }
+  /* Sections */
+  section { padding: 56px 0; }
+  section.alt { background: var(--surface); border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); }
+  h2 { font-size: 30px; letter-spacing: -.01em; margin: 0 0 14px; text-align: center; }
+  section > .wrap > p.sec-lead { text-align: center; color: var(--muted); max-width: 640px; margin: 0 auto 36px; font-size: 16px; }
 
-  /* ---------- Modal ---------- */
-  .modal-back {
-    position: fixed; inset: 0; background: rgba(20,22,28,.4);
-    display: flex; align-items: center; justify-content: center; padding: 20px; z-index: 50;
-  }
-  .modal { background: var(--surface); border-radius: var(--radius); box-shadow: 0 10px 40px rgba(0,0,0,.2); padding: 24px; width: 100%; max-width: 420px; }
-  .modal h2 { margin: 0 0 6px; font-size: 17px; }
-  .modal p { margin: 0 0 16px; color: var(--muted); font-size: 13.5px; }
-  .modal textarea {
-    width: 100%; min-height: 72px; resize: vertical;
-    border: 1px solid var(--border); border-radius: 8px; padding: 10px 12px;
-    font-family: inherit; font-size: 14px; outline: none;
-  }
-  .modal textarea:focus { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }
-  .presets { display: flex; flex-wrap: wrap; gap: 8px; margin: 12px 0; }
-  .preset { border: 1px solid var(--border); background: #fff; border-radius: 999px; padding: 6px 12px; font-size: 12.5px; color: var(--muted); }
-  .preset:hover { border-color: var(--accent); color: var(--accent); }
-  .modal-actions { display: flex; gap: 10px; margin-top: 18px; }
-  .modal-actions .btn { margin-top: 0; }
-  .modal.modal-wide { max-width: 540px; }
+  .prose { max-width: 720px; margin: 0 auto; }
+  .prose p { margin: 0 0 16px; }
 
-  /* history list */
-  .history-list { max-height: 60vh; overflow-y: auto; margin-top: 4px; }
-  .history-empty { color: var(--muted); font-size: 14px; padding: 16px 0; text-align: center; }
-  .h-round { border: 1px solid var(--border); border-radius: 10px; padding: 12px 14px; margin-bottom: 10px; }
-  .h-round .h-top { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; margin-bottom: 8px; }
-  .h-round .h-topic { font-weight: 600; font-size: 14px; }
-  .h-round .h-topic.none { color: var(--muted); font-weight: 500; font-style: italic; }
-  .h-round .h-time { font-size: 12px; color: var(--muted); white-space: nowrap; }
-  .h-round .h-result { font-size: 13px; margin-bottom: 8px; }
-  .h-round .h-result .consensus { color: var(--green); font-weight: 600; }
-  .h-votes { display: flex; flex-wrap: wrap; gap: 6px; }
-  .h-vote { display: inline-flex; align-items: center; gap: 5px; border: 1px solid var(--border); border-radius: 999px; padding: 3px 10px; font-size: 12.5px; background: #fafbfc; }
-  .h-vote b { color: var(--accent); }
+  /* Steps */
+  .steps { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
+  .step { background: var(--bg); border: 1px solid var(--border); border-radius: var(--radius); padding: 24px; }
+  section.alt .step { background: var(--surface); }
+  .step .n { width: 30px; height: 30px; border-radius: 50%; background: var(--accent); color: #fff; font-weight: 700; font-size: 14px; display: flex; align-items: center; justify-content: center; margin-bottom: 12px; }
+  .step h3 { margin: 0 0 6px; font-size: 17px; }
+  .step p { margin: 0; color: var(--muted); font-size: 14.5px; }
 
-  /* vote distribution (choice -> count), shown after reveal and in history */
-  .dist-row { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; }
-  .dist-chip { display: inline-flex; align-items: center; gap: 6px; border: 1px solid var(--border); border-radius: 999px; padding: 5px 14px; font-size: 13.5px; background: #fafbfc; }
-  .dist-chip b { color: var(--accent); font-size: 15px; }
-  .dist-chip .n { color: var(--muted); }
-  .h-round .dist-row { justify-content: flex-start; margin-bottom: 8px; }
+  /* Features */
+  .features { display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px; }
+  .feature { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 22px; }
+  section.alt .feature { background: var(--bg); }
+  .feature .ico { font-size: 22px; margin-bottom: 10px; }
+  .feature h3 { margin: 0 0 6px; font-size: 16px; }
+  .feature p { margin: 0; color: var(--muted); font-size: 14px; }
 
-  .toast {
-    position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%);
-    background: #1c1e21; color: #fff; padding: 10px 18px; border-radius: 8px; font-size: 13.5px;
-    opacity: 0; transition: opacity .25s; pointer-events: none; z-index: 60;
-  }
-  .toast.show { opacity: 1; }
+  /* Scales */
+  .scales { display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; margin-top: 8px; }
+  .scale-chip { background: var(--surface); border: 1px solid var(--border); border-radius: 999px; padding: 8px 16px; font-size: 14px; }
+  .scale-chip b { color: var(--accent); }
 
-  /* ---------- Reveal countdown ---------- */
-  .countdown-overlay {
-    position: fixed; inset: 0; z-index: 55;
-    display: flex; align-items: center; justify-content: center;
-    background: rgba(244,245,247,.78);
-    backdrop-filter: blur(3px);
-    pointer-events: none;
-  }
-  .countdown-overlay .num {
-    font-size: 150px; font-weight: 750; color: var(--accent);
-    text-shadow: 0 8px 30px rgba(59,91,219,.25);
-    line-height: 1;
-  }
-  .countdown-overlay .num.pop { animation: cd-pop .82s ease-out; }
-  @keyframes cd-pop {
-    0%   { transform: scale(.35); opacity: 0; }
-    28%  { transform: scale(1.18); opacity: 1; }
-    70%  { transform: scale(1); opacity: 1; }
-    100% { transform: scale(.82); opacity: 0; }
-  }
+  /* FAQ */
+  .faq { max-width: 720px; margin: 0 auto; }
+  details { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 4px 18px; margin-bottom: 10px; }
+  details summary { cursor: pointer; font-weight: 600; padding: 14px 0; font-size: 15.5px; list-style: none; display: flex; justify-content: space-between; align-items: center; }
+  details summary::-webkit-details-marker { display: none; }
+  details summary::after { content: "+"; color: var(--muted); font-size: 20px; }
+  details[open] summary::after { content: "−"; }
+  details p { margin: 0 0 16px; color: var(--muted); font-size: 14.5px; }
 
-  /* card flip when votes are revealed */
-  .seat .pip.flip-in { animation: flip-in .5s cubic-bezier(.2,.7,.3,1); }
-  @keyframes flip-in {
-    0%   { transform: rotateY(90deg); opacity: .2; }
-    100% { transform: rotateY(0); opacity: 1; }
-  }
+  /* Final CTA */
+  .cta-band { text-align: center; }
+  .cta-band h2 { margin-bottom: 8px; }
+  .cta-band p { color: var(--muted); margin: 0 0 24px; }
 
-  /* consensus banner */
-  .celebrate-banner {
-    position: fixed; top: 74px; left: 50%;
-    transform: translateX(-50%);
-    background: var(--green); color: #fff; padding: 12px 30px; border-radius: 999px;
-    font-size: 18px; font-weight: 700; z-index: 58; opacity: 0;
-    box-shadow: 0 10px 34px rgba(47,158,107,.4);
-    pointer-events: none;
-  }
-  .celebrate-banner.show { animation: banner-in 2.6s ease-out forwards; }
-  @keyframes banner-in {
-    0%   { opacity: 0; transform: translateX(-50%) translateY(-24px) scale(.8); }
-    12%  { opacity: 1; transform: translateX(-50%) translateY(0) scale(1.05); }
-    20%  { transform: translateX(-50%) translateY(0) scale(1); }
-    82%  { opacity: 1; transform: translateX(-50%) translateY(0) scale(1); }
-    100% { opacity: 0; transform: translateX(-50%) translateY(-12px) scale(.96); }
-  }
+  /* Footer */
+  footer { background: var(--surface); border-top: 1px solid var(--border); padding: 32px 0; color: var(--muted); font-size: 13.5px; }
+  .foot-inner { display: flex; justify-content: space-between; align-items: center; gap: 16px; flex-wrap: wrap; }
+  footer a { color: var(--muted); }
 
-  /* confetti */
-  .confetti-piece {
-    position: fixed; top: -14px; width: 9px; height: 15px; z-index: 57;
-    will-change: transform, opacity; pointer-events: none;
-  }
-  @keyframes confetti-fall {
-    0%   { transform: translateY(0) rotateZ(0deg); opacity: 1; }
-    100% { transform: translateY(106vh) rotateZ(760deg); opacity: .85; }
+  @media (max-width: 720px) {
+    .hero h1 { font-size: 32px; }
+    .steps, .features { grid-template-columns: 1fr; }
+    h2 { font-size: 24px; }
   }
 </style>
 </head>
 <body>
 
-<!-- Landing -->
-<div class="landing" id="landing">
-  <div class="card-panel">
-    <h1>Planning Poker</h1>
-    <p class="sub">Estimate together. No sign-up, no clutter.</p>
-
-    <label for="name">Your name</label>
-    <input type="text" id="name" placeholder="e.g. Bilel" maxlength="40" autocomplete="off" />
-
-    <label for="roomInput">Room</label>
-    <input type="text" id="roomInput" placeholder="Room code (blank = new room)" maxlength="64" autocomplete="off" />
-
-    <label class="check">
-      <input type="checkbox" id="spectator" /> Join as spectator (watch, don't vote)
-    </label>
-
-    <button class="btn" id="enterBtn">Enter room</button>
+<header class="nav">
+  <div class="wrap nav-inner">
+    <a class="brand" href="/">♠ Planning<span>Poker</span></a>
+    <div class="spacer"></div>
+    <a class="navlink" href="#how">How it works</a>
+    <a class="navlink" href="#features">Features</a>
+    <a class="navlink" href="#faq">FAQ</a>
+    <a class="btn" href="/app">Start a session</a>
   </div>
-</div>
+</header>
 
-<!-- Room -->
-<div class="room" id="room">
-  <header class="bar">
-    <span class="brand">♠ Planning Poker</span>
-    <input class="topic" id="topicInput" placeholder="What are we estimating? (click to set a topic)" maxlength="120" />
-    <span class="room-code">Room <b id="roomCode"></b></span>
-    <button class="icon-btn" id="scaleBtn">Scale</button>
-    <button class="icon-btn" id="historyBtn">History</button>
-    <button class="icon-btn" id="specToggle">Spectate</button>
-    <button class="icon-btn" id="inviteBtn">Invite</button>
-  </header>
+<main>
+  <!-- Hero -->
+  <section class="hero">
+    <div class="wrap">
+      <h1>Free online <span class="grad">Planning Poker</span><br />for agile teams</h1>
+      <p class="lead">
+        Estimate user stories together in real time. Create a room, share the link,
+        vote on story points and reveal the cards as a team — no sign-up required.
+      </p>
+      <div class="cta">
+        <a class="btn" href="/app">Start a free session</a>
+        <a class="btn secondary" href="#how">See how it works</a>
+      </div>
+      <p class="trust">
+        <b>No sign-up</b> · <b>No ads</b> · <b>No tracking</b> · <b>Open-source</b> · Unlimited participants
+      </p>
 
-  <main class="table-wrap">
-    <div class="members" id="members"></div>
-
-    <div class="table-center" id="center">
-      <span class="status" id="centerStatus">Waiting for votes…</span>
+      <!-- Static, decorative preview of a revealed round -->
+      <div class="preview" aria-hidden="true">
+        <div class="seats">
+          <div class="seat"><div class="card up">5</div><small>Alex</small></div>
+          <div class="seat"><div class="card up">5</div><small>Sam</small></div>
+          <div class="seat"><div class="card up">8</div><small>Jo</small></div>
+          <div class="seat"><div class="card up">5</div><small>Robin</small></div>
+          <div class="seat"><div class="card up">5</div><small>Kim</small></div>
+        </div>
+        <div class="result">Average 5.6 · almost there 🎉</div>
+      </div>
     </div>
+  </section>
 
-    <div class="dist-row hidden" id="distRow"></div>
-  </main>
-
-  <footer class="deck">
-    <div class="deck-inner">
-      <div class="deck-label" id="deckLabel">PICK YOUR CARD</div>
-      <div class="deck-cards" id="deckCards"></div>
+  <!-- What is planning poker -->
+  <section class="alt">
+    <div class="wrap prose">
+      <h2>What is planning poker?</h2>
+      <p>
+        <strong>Planning poker</strong> — also known as <strong>scrum poker</strong> — is a
+        consensus-based estimation technique widely used in agile software development.
+        Instead of one person guessing how much effort a task takes, the whole team
+        estimates together. Each member privately selects a card representing their
+        estimate (often a Fibonacci number of story points), and everyone reveals at the
+        same time.
+      </p>
+      <p>
+        The reveal is the interesting part: when estimates differ, the highest and lowest
+        voters explain their reasoning. That short conversation surfaces hidden complexity,
+        misunderstood requirements and edge cases — then the team re-votes until it lands on
+        a shared number. The result is a more accurate estimate and a shared understanding
+        of the work, not just a figure on a ticket.
+      </p>
+      <p>
+        This tool brings that ritual online for remote and hybrid teams: fast, distraction-free,
+        and free to use.
+      </p>
     </div>
-  </footer>
-</div>
+  </section>
 
-<!-- Scale modal -->
-<div class="modal-back hidden" id="scaleModal">
-  <div class="modal">
-    <h2>Voting scale</h2>
-    <p>Comma-separated values. Changing the scale clears the current round.</p>
-    <div class="presets" id="presets"></div>
-    <textarea id="scaleInput"></textarea>
-    <div class="modal-actions">
-      <button class="btn secondary" id="scaleCancel">Cancel</button>
-      <button class="btn" id="scaleSave">Save scale</button>
+  <!-- How it works -->
+  <section id="how">
+    <div class="wrap">
+      <h2>How it works</h2>
+      <p class="sec-lead">Run an estimation session in under a minute.</p>
+      <div class="steps">
+        <div class="step">
+          <div class="n">1</div>
+          <h3>Create a room</h3>
+          <p>Click “Start a session”, enter your name and get a private room instantly. No account, no setup.</p>
+        </div>
+        <div class="step">
+          <div class="n">2</div>
+          <h3>Invite your team</h3>
+          <p>Share the room link. Teammates join with a name in one click, as voters or spectators.</p>
+        </div>
+        <div class="step">
+          <div class="n">3</div>
+          <h3>Vote &amp; reveal</h3>
+          <p>Everyone picks a card, then reveal together with a 3-2-1 countdown. See the average and reach consensus.</p>
+        </div>
+      </div>
+      <div style="text-align:center; margin-top:34px;">
+        <a class="btn" href="/app">Start a free session</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- Features -->
+  <section id="features" class="alt">
+    <div class="wrap">
+      <h2>Everything you need, nothing you don't</h2>
+      <p class="sec-lead">A focused tool that does one thing well.</p>
+      <div class="features">
+        <div class="feature">
+          <div class="ico">⚡</div>
+          <h3>Real-time &amp; instant</h3>
+          <p>Votes sync live over WebSockets. Cards flip for everyone at the same moment.</p>
+        </div>
+        <div class="feature">
+          <div class="ico">🃏</div>
+          <h3>Custom scales</h3>
+          <p>Fibonacci, T-shirt sizes, powers of two — or type your own scale in seconds.</p>
+        </div>
+        <div class="feature">
+          <div class="ico">👁</div>
+          <h3>Spectator mode</h3>
+          <p>Facilitators and stakeholders can watch a round without skewing the vote.</p>
+        </div>
+        <div class="feature">
+          <div class="ico">📊</div>
+          <h3>Averages &amp; consensus</h3>
+          <p>Automatic average, plus a celebration when the whole team agrees.</p>
+        </div>
+        <div class="feature">
+          <div class="ico">🕘</div>
+          <h3>Session history</h3>
+          <p>Every revealed round is saved, so you can revisit past estimates per room.</p>
+        </div>
+        <div class="feature">
+          <div class="ico">🔓</div>
+          <h3>Private &amp; open-source</h3>
+          <p>No ads, no tracking, no account. The full source is on GitHub.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Scales -->
+  <section>
+    <div class="wrap prose">
+      <h2>Estimation scales</h2>
+      <p class="sec-lead">Pick a preset or bring your own. The default is a lean Fibonacci set.</p>
+      <div class="scales">
+        <div class="scale-chip"><b>Fibonacci Lite</b> · 1 3 5 8 13</div>
+        <div class="scale-chip">Fibonacci · 0 1 2 3 5 8 13 21 ? ☕</div>
+        <div class="scale-chip">T-shirt · XS S M L XL</div>
+        <div class="scale-chip">Powers of 2 · 1 2 4 8 16 32</div>
+        <div class="scale-chip">Custom…</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- FAQ -->
+  <section id="faq" class="alt">
+    <div class="wrap">
+      <h2>Frequently asked questions</h2>
+      <div class="faq">
+        <details open>
+          <summary>What is planning poker?</summary>
+          <p>Planning poker (or scrum poker) is a consensus-based estimation technique for agile teams. Each member privately picks a card representing their effort estimate, then everyone reveals at once to discuss differences and agree on a number.</p>
+        </details>
+        <details>
+          <summary>Is this planning poker tool free?</summary>
+          <p>Yes — completely free, with no sign-up, no ads and no tracking. It's also open-source.</p>
+        </details>
+        <details>
+          <summary>Do I need to create an account?</summary>
+          <p>No account is required. Create a room, share the link, and your teammates join instantly with just a name.</p>
+        </details>
+        <details>
+          <summary>Which estimation scales are supported?</summary>
+          <p>Fibonacci, Fibonacci Lite (1, 3, 5, 8, 13), T-shirt sizes, powers of two, and more. You can also enter a fully custom scale.</p>
+        </details>
+        <details>
+          <summary>Can people watch without voting?</summary>
+          <p>Yes. Anyone can join as a spectator to observe a session without casting a vote — useful for facilitators and stakeholders.</p>
+        </details>
+        <details>
+          <summary>Does it work for remote and hybrid teams?</summary>
+          <p>Absolutely. It's built for distributed teams: share a link and everyone estimates together in real time from anywhere.</p>
+        </details>
+      </div>
+    </div>
+  </section>
+
+  <!-- Final CTA -->
+  <section class="cta-band">
+    <div class="wrap">
+      <h2>Ready to estimate together?</h2>
+      <p>Start a free session now — no sign-up, no install.</p>
+      <a class="btn" href="/app">Start a free session</a>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <div class="wrap foot-inner">
+    <div>♠ Planning Poker — free, open-source scrum estimation.</div>
+    <div>
+      <a href="/app">Launch app</a> ·
+      <a href="https://github.com/BanelhaqB/planning-poker" rel="noopener">GitHub</a>
     </div>
   </div>
-</div>
+</footer>
 
-<!-- History modal -->
-<div class="modal-back hidden" id="historyModal">
-  <div class="modal modal-wide">
-    <h2>Room history</h2>
-    <p>Past revealed rounds for this room, most recent first.</p>
-    <div class="history-list" id="historyList"></div>
-    <div class="modal-actions">
-      <button class="btn secondary" id="historyClose">Close</button>
-    </div>
-  </div>
-</div>
-
-<!-- Reveal countdown + celebration -->
-<div class="countdown-overlay hidden" id="countdown"><span class="num" id="countdownNum"></span></div>
-<div class="celebrate-banner" id="celebrateBanner">Unanimité 🎉</div>
-
-<div class="toast" id="toast"></div>
-
-<script>
-(() => {
-  "use strict";
-
-  const PRESETS = {
-    "Fibonacci Lite": ["1","3","5","8","13"],
-    "Fibonacci":      ["0","1","2","3","5","8","13","21","?","☕"],
-    "Modified Fib":   ["0","½","1","2","3","5","8","13","20","40","100","?"],
-    "T-shirt":        ["XS","S","M","L","XL","XXL","?"],
-    "Powers of 2":    ["1","2","4","8","16","32","?"],
-    "Yes / No":       ["👍","👎","?"],
-  };
-
-  const $ = (id) => document.getElementById(id);
-  const landing = $("landing"), roomEl = $("room");
-
-  let ws = null;
-  let me = { name: "", spectator: false };
-  let roomId = "";
-  let myVote = null;
-  let lastRevealed = false;
-
-  // ---- Routing: /room/<id> deep links ----
-  function currentRoomFromUrl() {
-    const m = location.pathname.match(/^\/room\/([A-Za-z0-9_-]{1,64})$/);
-    return m ? m[1] : "";
-  }
-  function randomRoom() {
-    return Math.random().toString(36).slice(2, 8);
-  }
-
-  // Prefill room code if arriving via a shared link.
-  const urlRoom = currentRoomFromUrl();
-  if (urlRoom) $("roomInput").value = urlRoom;
-
-  // ---- Landing ----
-  $("enterBtn").addEventListener("click", enter);
-  $("name").addEventListener("keydown", (e) => { if (e.key === "Enter") enter(); });
-  $("roomInput").addEventListener("keydown", (e) => { if (e.key === "Enter") enter(); });
-
-  function enter() {
-    const name = $("name").value.trim();
-    if (!name) { $("name").focus(); return; }
-    me.name = name;
-    me.spectator = $("spectator").checked;
-    roomId = ($("roomInput").value.trim() || randomRoom());
-    history.replaceState(null, "", "/room/" + roomId);
-    connect();
-  }
-
-  // ---- WebSocket ----
-  function connect() {
-    const proto = location.protocol === "https:" ? "wss" : "ws";
-    ws = new WebSocket(`${proto}://${location.host}/api/room/${roomId}/ws`);
-
-    ws.addEventListener("open", () => {
-      landing.style.display = "none";
-      roomEl.style.display = "flex";
-      $("roomCode").textContent = roomId;
-      send({ type: "join", name: me.name, spectator: me.spectator });
-      updateSpecButton();
-    });
-
-    ws.addEventListener("message", (e) => {
-      const msg = JSON.parse(e.data);
-      if (msg.type === "state") render(msg);
-    });
-
-    ws.addEventListener("close", () => {
-      toast("Disconnected — reconnecting…");
-      setTimeout(connect, 1500);
-    });
-  }
-
-  function send(obj) {
-    if (ws && ws.readyState === WebSocket.OPEN) ws.send(JSON.stringify(obj));
-  }
-
-  // ---- Render ----
-  let currentScale = [];
-  let lastState = null;
-  let revealAnimating = false;
-
-  // Entry point for every state message: handles the reveal countdown,
-  // then delegates the actual DOM drawing to paint().
-  function render(s) {
-    const justRevealed = !lastRevealed && s.revealed;
-    const newRound = lastRevealed && !s.revealed;
-    lastRevealed = s.revealed;
-    lastState = s;
-
-    if (newRound) { myVote = null; revealAnimating = false; }
-
-    if (justRevealed) {
-      startRevealCountdown();   // 3-2-1, then reveal + celebrate
-      paint(s);                 // keep cards face-down during the count
-      return;
-    }
-    paint(s);
-  }
-
-  function startRevealCountdown() {
-    revealAnimating = true;
-    const overlay = $("countdown");
-    const numEl = $("countdownNum");
-    overlay.classList.remove("hidden");
-
-    let n = 3;
-    const STEP = 900;
-    const tick = () => {
-      numEl.textContent = n;
-      numEl.classList.remove("pop");
-      void numEl.offsetWidth; // restart the animation
-      numEl.classList.add("pop");
-
-      if (n === 1) {
-        setTimeout(() => {
-          overlay.classList.add("hidden");
-          revealAnimating = false;
-          paint(lastState);
-          if (lastState && lastState.stats && lastState.stats.consensus) celebrate();
-        }, STEP);
-        return;
-      }
-      n--;
-      setTimeout(tick, STEP);
-    };
-    tick();
-  }
-
-  function paint(s) {
-    currentScale = s.scale;
-    const revealed = s.revealed && !revealAnimating;
-
-    // Members / seats
-    const seats = $("members");
-    seats.innerHTML = "";
-    s.members.forEach((m) => {
-      const seat = document.createElement("div");
-      seat.className = "seat";
-
-      const pip = document.createElement("div");
-      pip.className = "pip";
-      if (m.spectator) {
-        pip.classList.add("spectator");
-        pip.textContent = "👁";
-      } else if (revealed) {
-        pip.classList.add("revealed", "flip-in");
-        pip.textContent = m.vote !== null ? m.vote : "–";
-      } else if (m.hasVoted) {
-        pip.classList.add("voted");
-        pip.textContent = "✓";
-      } else {
-        pip.textContent = "";
-      }
-
-      const name = document.createElement("div");
-      name.className = "name" + (m.name === me.name ? " me" : "");
-      name.textContent = m.name;
-
-      seat.appendChild(pip);
-      seat.appendChild(name);
-      seats.appendChild(seat);
-    });
-
-    // Topic (don't clobber while user is typing)
-    const topicEl = $("topicInput");
-    if (document.activeElement !== topicEl) topicEl.value = s.topic;
-
-    // Center table
-    const center = $("center");
-    center.innerHTML = "";
-    if (revealAnimating) {
-      const status = document.createElement("span");
-      status.className = "status";
-      status.textContent = "Revealing…";
-      center.appendChild(status);
-    } else if (revealed) {
-      const wrap = document.createElement("div");
-      wrap.className = "stat";
-      if (s.stats.consensus) {
-        wrap.innerHTML = `<span class="consensus">Consensus 🎉</span>`;
-      } else if (s.stats.average !== null) {
-        wrap.innerHTML = `Average <b>${s.stats.average}</b>`;
-      } else {
-        wrap.textContent = "Votes revealed";
-      }
-      center.appendChild(wrap);
-
-      const reset = document.createElement("button");
-      reset.className = "action";
-      reset.textContent = "New round";
-      reset.onclick = () => send({ type: "reset" });
-      center.appendChild(reset);
-    } else {
-      const status = document.createElement("span");
-      status.className = "status";
-      status.textContent = s.voterCount === 0
-        ? "Waiting for voters…"
-        : `${s.votesIn} / ${s.voterCount} voted`;
-      center.appendChild(status);
-
-      const reveal = document.createElement("button");
-      reveal.className = "action" + (s.votesIn === 0 ? " ghost" : "");
-      reveal.textContent = "Reveal cards";
-      reveal.disabled = s.votesIn === 0;
-      reveal.onclick = () => send({ type: "reveal" });
-      center.appendChild(reveal);
-    }
-
-    renderDistribution(s, revealed);
-    renderDeck(s, revealed);
-  }
-
-  function renderDistribution(s, revealed) {
-    const row = $("distRow");
-    row.innerHTML = "";
-    const dist = revealed && s.stats.distribution ? s.stats.distribution : [];
-    if (!dist.length) {
-      row.classList.add("hidden");
-      return;
-    }
-    row.classList.remove("hidden");
-    dist.forEach((d) => {
-      const chip = document.createElement("span");
-      chip.className = "dist-chip";
-      chip.innerHTML = `<b>${escapeHtml(d.value)}</b><span class="n">×${d.count}</span>`;
-      row.appendChild(chip);
-    });
-  }
-
-  function renderDeck(s, revealed) {
-    const label = $("deckLabel");
-    const deck = $("deckCards");
-    deck.innerHTML = "";
-
-    if (me.spectator) {
-      label.textContent = "SPECTATOR MODE";
-      const note = document.createElement("div");
-      note.className = "spectator-note";
-      note.textContent = "You're watching this round. Switch to voter from the top bar.";
-      deck.appendChild(note);
-      return;
-    }
-
-    label.textContent = revealed ? "ROUND REVEALED" : "PICK YOUR CARD";
-    s.scale.forEach((val) => {
-      const c = document.createElement("button");
-      c.className = "pcard" + (myVote === val ? " selected" : "");
-      c.textContent = val;
-      c.disabled = revealed || revealAnimating;
-      c.onclick = () => {
-        myVote = val;
-        send({ type: "vote", value: val });
-        renderDeck(s, revealed);
-      };
-      deck.appendChild(c);
-    });
-  }
-
-  // ---- Celebration (unanimity) ----
-  function celebrate() {
-    const banner = $("celebrateBanner");
-    banner.classList.remove("show");
-    void banner.offsetWidth;
-    banner.classList.add("show");
-    confettiBurst();
-  }
-
-  function confettiBurst() {
-    const colors = ["#3b5bdb", "#2f9e6b", "#f59f00", "#e64980", "#4dabf7", "#ffd43b"];
-    for (let i = 0; i < 100; i++) {
-      const p = document.createElement("div");
-      p.className = "confetti-piece";
-      p.style.left = Math.random() * 100 + "vw";
-      p.style.background = colors[i % colors.length];
-      if (Math.random() < 0.5) p.style.borderRadius = "50%";
-      const dur = 2 + Math.random() * 1.6;
-      p.style.animation = `confetti-fall ${dur}s linear forwards`;
-      p.style.animationDelay = Math.random() * 0.35 + "s";
-      document.body.appendChild(p);
-      setTimeout(() => p.remove(), (dur + 0.5) * 1000);
-    }
-  }
-
-  // ---- Top bar actions ----
-  $("topicInput").addEventListener("change", (e) => {
-    send({ type: "set_topic", topic: e.target.value });
-  });
-
-  $("specToggle").addEventListener("click", () => {
-    me.spectator = !me.spectator;
-    if (me.spectator) myVote = null;
-    send({ type: "set_spectator", spectator: me.spectator });
-    updateSpecButton();
-  });
-  function updateSpecButton() {
-    $("specToggle").textContent = me.spectator ? "Become voter" : "Spectate";
-  }
-
-  $("inviteBtn").addEventListener("click", async () => {
-    const url = `${location.origin}/room/${roomId}`;
-    try {
-      await navigator.clipboard.writeText(url);
-      toast("Invite link copied");
-    } catch {
-      prompt("Share this link:", url);
-    }
-  });
-
-  // ---- Scale modal ----
-  const scaleModal = $("scaleModal");
-  $("scaleBtn").addEventListener("click", () => {
-    $("scaleInput").value = currentScale.join(", ");
-    scaleModal.classList.remove("hidden");
-  });
-  $("scaleCancel").addEventListener("click", () => scaleModal.classList.add("hidden"));
-  scaleModal.addEventListener("click", (e) => { if (e.target === scaleModal) scaleModal.classList.add("hidden"); });
-  $("scaleSave").addEventListener("click", () => {
-    const scale = $("scaleInput").value.split(",").map((s) => s.trim()).filter(Boolean);
-    if (scale.length) {
-      send({ type: "set_scale", scale });
-      myVote = null;
-      scaleModal.classList.add("hidden");
-    }
-  });
-
-  const presetsEl = $("presets");
-  Object.entries(PRESETS).forEach(([name, vals]) => {
-    const b = document.createElement("button");
-    b.className = "preset";
-    b.textContent = name;
-    b.onclick = () => { $("scaleInput").value = vals.join(", "); };
-    presetsEl.appendChild(b);
-  });
-
-  // ---- History modal ----
-  const historyModal = $("historyModal");
-  $("historyBtn").addEventListener("click", openHistory);
-  $("historyClose").addEventListener("click", () => historyModal.classList.add("hidden"));
-  historyModal.addEventListener("click", (e) => { if (e.target === historyModal) historyModal.classList.add("hidden"); });
-
-  async function openHistory() {
-    const list = $("historyList");
-    list.innerHTML = `<div class="history-empty">Loading…</div>`;
-    historyModal.classList.remove("hidden");
-    try {
-      const res = await fetch(`/api/room/${encodeURIComponent(roomId)}/history`);
-      const data = await res.json();
-      renderHistory(data.rounds || []);
-    } catch {
-      list.innerHTML = `<div class="history-empty">Could not load history.</div>`;
-    }
-  }
-
-  function fmtTime(ms) {
-    try { return new Date(ms).toLocaleString(); } catch { return ""; }
-  }
-
-  function renderHistory(rounds) {
-    const list = $("historyList");
-    list.innerHTML = "";
-    if (!rounds.length) {
-      list.innerHTML = `<div class="history-empty">No revealed rounds yet.</div>`;
-      return;
-    }
-    rounds.forEach((r) => {
-      const el = document.createElement("div");
-      el.className = "h-round";
-
-      const top = document.createElement("div");
-      top.className = "h-top";
-      const topic = document.createElement("span");
-      topic.className = "h-topic" + (r.topic ? "" : " none");
-      topic.textContent = r.topic || "(no topic)";
-      const time = document.createElement("span");
-      time.className = "h-time";
-      time.textContent = fmtTime(r.createdAt);
-      top.appendChild(topic);
-      top.appendChild(time);
-
-      const result = document.createElement("div");
-      result.className = "h-result";
-      if (r.consensus) {
-        result.innerHTML = `<span class="consensus">Unanimity 🎉</span> · ${r.voterCount} voters`;
-      } else if (r.average !== null && r.average !== undefined) {
-        result.innerHTML = `Average <b>${Number(r.average).toFixed(1)}</b> · ${r.voterCount} voters`;
-      } else {
-        result.textContent = `${r.voterCount} voters`;
-      }
-
-      const dist = document.createElement("div");
-      dist.className = "dist-row";
-      tallyVotes(r.votes, r.scale || []).forEach((d) => {
-        const chip = document.createElement("span");
-        chip.className = "dist-chip";
-        chip.innerHTML = `<b>${escapeHtml(d.value)}</b><span class="n">×${d.count}</span>`;
-        dist.appendChild(chip);
-      });
-
-      const votes = document.createElement("div");
-      votes.className = "h-votes";
-      r.votes.forEach((v) => {
-        const chip = document.createElement("span");
-        chip.className = "h-vote";
-        chip.innerHTML = `${escapeHtml(v.name)} <b>${escapeHtml(v.value)}</b>`;
-        votes.appendChild(chip);
-      });
-
-      el.appendChild(top);
-      el.appendChild(result);
-      el.appendChild(dist);
-      el.appendChild(votes);
-      list.appendChild(el);
-    });
-  }
-
-  /** Count occurrences per value, sorted by count desc, ties broken by scale order. */
-  function tallyVotes(votes, scale) {
-    const counts = new Map();
-    votes.forEach((v) => counts.set(v.value, (counts.get(v.value) || 0) + 1));
-    const scaleIndex = new Map(scale.map((v, i) => [v, i]));
-    return [...counts.entries()]
-      .map(([value, count]) => ({ value, count }))
-      .sort((a, b) => b.count - a.count || (scaleIndex.get(a.value) ?? 0) - (scaleIndex.get(b.value) ?? 0));
-  }
-
-  function escapeHtml(s) {
-    return String(s).replace(/[&<>"']/g, (c) =>
-      ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
-  }
-
-  // ---- Toast ----
-  let toastTimer = null;
-  function toast(text) {
-    const t = $("toast");
-    t.textContent = text;
-    t.classList.add("show");
-    clearTimeout(toastTimer);
-    toastTimer = setTimeout(() => t.classList.remove("show"), 2200);
-  }
-})();
-</script>
 </body>
 </html>
