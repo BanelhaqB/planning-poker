@@ -212,6 +212,21 @@
   .preset:hover { border-color: var(--accent); color: var(--accent); }
   .modal-actions { display: flex; gap: 10px; margin-top: 18px; }
   .modal-actions .btn { margin-top: 0; }
+  .modal.modal-wide { max-width: 540px; }
+
+  /* history list */
+  .history-list { max-height: 60vh; overflow-y: auto; margin-top: 4px; }
+  .history-empty { color: var(--muted); font-size: 14px; padding: 16px 0; text-align: center; }
+  .h-round { border: 1px solid var(--border); border-radius: 10px; padding: 12px 14px; margin-bottom: 10px; }
+  .h-round .h-top { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; margin-bottom: 8px; }
+  .h-round .h-topic { font-weight: 600; font-size: 14px; }
+  .h-round .h-topic.none { color: var(--muted); font-weight: 500; font-style: italic; }
+  .h-round .h-time { font-size: 12px; color: var(--muted); white-space: nowrap; }
+  .h-round .h-result { font-size: 13px; margin-bottom: 8px; }
+  .h-round .h-result .consensus { color: var(--green); font-weight: 600; }
+  .h-votes { display: flex; flex-wrap: wrap; gap: 6px; }
+  .h-vote { display: inline-flex; align-items: center; gap: 5px; border: 1px solid var(--border); border-radius: 999px; padding: 3px 10px; font-size: 12.5px; background: #fafbfc; }
+  .h-vote b { color: var(--accent); }
 
   .toast {
     position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%);
@@ -306,6 +321,7 @@
     <input class="topic" id="topicInput" placeholder="What are we estimating? (click to set a topic)" maxlength="120" />
     <span class="room-code">Room <b id="roomCode"></b></span>
     <button class="icon-btn" id="scaleBtn">Scale</button>
+    <button class="icon-btn" id="historyBtn">History</button>
     <button class="icon-btn" id="specToggle">Spectate</button>
     <button class="icon-btn" id="inviteBtn">Invite</button>
   </header>
@@ -336,6 +352,18 @@
     <div class="modal-actions">
       <button class="btn secondary" id="scaleCancel">Cancel</button>
       <button class="btn" id="scaleSave">Save scale</button>
+    </div>
+  </div>
+</div>
+
+<!-- History modal -->
+<div class="modal-back hidden" id="historyModal">
+  <div class="modal modal-wide">
+    <h2>Room history</h2>
+    <p>Past revealed rounds for this room, most recent first.</p>
+    <div class="history-list" id="historyList"></div>
+    <div class="modal-actions">
+      <button class="btn secondary" id="historyClose">Close</button>
     </div>
   </div>
 </div>
@@ -663,6 +691,82 @@
     b.onclick = () => { $("scaleInput").value = vals.join(", "); };
     presetsEl.appendChild(b);
   });
+
+  // ---- History modal ----
+  const historyModal = $("historyModal");
+  $("historyBtn").addEventListener("click", openHistory);
+  $("historyClose").addEventListener("click", () => historyModal.classList.add("hidden"));
+  historyModal.addEventListener("click", (e) => { if (e.target === historyModal) historyModal.classList.add("hidden"); });
+
+  async function openHistory() {
+    const list = $("historyList");
+    list.innerHTML = `<div class="history-empty">Loading…</div>`;
+    historyModal.classList.remove("hidden");
+    try {
+      const res = await fetch(`/api/room/${encodeURIComponent(roomId)}/history`);
+      const data = await res.json();
+      renderHistory(data.rounds || []);
+    } catch {
+      list.innerHTML = `<div class="history-empty">Could not load history.</div>`;
+    }
+  }
+
+  function fmtTime(ms) {
+    try { return new Date(ms).toLocaleString(); } catch { return ""; }
+  }
+
+  function renderHistory(rounds) {
+    const list = $("historyList");
+    list.innerHTML = "";
+    if (!rounds.length) {
+      list.innerHTML = `<div class="history-empty">No revealed rounds yet.</div>`;
+      return;
+    }
+    rounds.forEach((r) => {
+      const el = document.createElement("div");
+      el.className = "h-round";
+
+      const top = document.createElement("div");
+      top.className = "h-top";
+      const topic = document.createElement("span");
+      topic.className = "h-topic" + (r.topic ? "" : " none");
+      topic.textContent = r.topic || "(no topic)";
+      const time = document.createElement("span");
+      time.className = "h-time";
+      time.textContent = fmtTime(r.createdAt);
+      top.appendChild(topic);
+      top.appendChild(time);
+
+      const result = document.createElement("div");
+      result.className = "h-result";
+      if (r.consensus) {
+        result.innerHTML = `<span class="consensus">Unanimity 🎉</span> · ${r.voterCount} voters`;
+      } else if (r.average !== null && r.average !== undefined) {
+        result.innerHTML = `Average <b>${Number(r.average).toFixed(1)}</b> · ${r.voterCount} voters`;
+      } else {
+        result.textContent = `${r.voterCount} voters`;
+      }
+
+      const votes = document.createElement("div");
+      votes.className = "h-votes";
+      r.votes.forEach((v) => {
+        const chip = document.createElement("span");
+        chip.className = "h-vote";
+        chip.innerHTML = `${escapeHtml(v.name)} <b>${escapeHtml(v.value)}</b>`;
+        votes.appendChild(chip);
+      });
+
+      el.appendChild(top);
+      el.appendChild(result);
+      el.appendChild(votes);
+      list.appendChild(el);
+    });
+  }
+
+  function escapeHtml(s) {
+    return String(s).replace(/[&<>"']/g, (c) =>
+      ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+  }
 
   // ---- Toast ----
   let toastTimer = null;

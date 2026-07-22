@@ -1,9 +1,9 @@
 /**
  * Worker entry point.
  *
- * Responsibilities:
- *  - /api/room/:id/ws  -> upgrade to WebSocket and hand off to the Room DO
- *  - everything else    -> serve static assets (the frontend in ./public)
+ *  - /api/room/:id/ws       -> upgrade to WebSocket and hand off to the Room DO
+ *  - /api/room/:id/history  -> read past rounds + votes for a room from D1
+ *  - everything else         -> serve static assets (the frontend in ./public)
  */
 
 export { Room } from "./room";
@@ -11,23 +11,29 @@ export { Room } from "./room";
 interface Env {
   ROOM: DurableObjectNamespace;
   ASSETS: Fetcher;
+  DB: D1Database;
 }
+
+const ROOM_ID = "[A-Za-z0-9_-]{1,64}";
 
 export default {
   async fetch(request: Request, env: Env): Promise<Response> {
     const url = new URL(request.url);
-    const match = url.pathname.match(/^\/api\/room\/([A-Za-z0-9_-]{1,64})\/ws$/);
 
-    if (match) {
-      const roomId = match[1];
-      // idFromName gives every room name its own single, consistent DO instance.
-      const id = env.ROOM.idFromName(roomId);
-      const stub = env.ROOM.get(id);
-      return stub.fetch(request);
+    // WebSocket -> Room Durable Object
+    const wsMatch = url.pathname.match(new RegExp(`^/api/room/(${ROOM_ID})/ws$`));
+    if (wsMatch) {
+      const id = env.ROOM.idFromName(wsMatch[1]);
+      return env.ROOM.get(id).fetch(request);
     }
 
-    // Fallback: static frontend. Unknown deep links resolve to index.html so
-    // /room/<id> works as a client-side route.
+    // History -> D1
+    const histMatch = url.pathname.match(new RegExp(`^/api/room/(${ROOM_ID})/history$`));
+    if (histMatch) {
+      return history(histMatch[1], env);
+    }
+
+    // Static frontend. Unknown deep links resolve to index.html so /room/<id> works.
     const res = await env.ASSETS.fetch(request);
     if (res.status === 404) {
       return env.ASSETS.fetch(new Request(new URL("/", url), request));
@@ -35,3 +41,64 @@ export default {
     return res;
   },
 };
+
+interface RoundRow {
+  id: string;
+  topic: string | null;
+  scale: string | null;
+  average: number | null;
+  consensus: number;
+  voter_count: number;
+  created_at: number;
+}
+
+interface VoteRow {
+  round_id: string;
+  voter_name: string;
+  value: string;
+}
+
+async function history(roomId: string, env: Env): Promise<Response> {
+  try {
+    const rounds = await env.DB.prepare(
+      `SELECT id, topic, scale, average, consensus, voter_count, created_at
+       FROM rounds WHERE room_id = ? ORDER BY created_at DESC LIMIT 50`,
+    )
+      .bind(roomId)
+      .all<RoundRow>();
+
+    const roundIds = (rounds.results ?? []).map((r) => r.id);
+    let votesByRound: Record<string, { name: string; value: string }[]> = {};
+
+    if (roundIds.length > 0) {
+      const placeholders = roundIds.map(() => "?").join(",");
+      const votes = await env.DB.prepare(
+        `SELECT round_id, voter_name, value FROM votes WHERE round_id IN (${placeholders})`,
+      )
+        .bind(...roundIds)
+        .all<VoteRow>();
+
+      for (const v of votes.results ?? []) {
+        (votesByRound[v.round_id] ??= []).push({ name: v.voter_name, value: v.value });
+      }
+    }
+
+    const payload = {
+      roomId,
+      rounds: (rounds.results ?? []).map((r) => ({
+        id: r.id,
+        topic: r.topic,
+        scale: r.scale ? JSON.parse(r.scale) : [],
+        average: r.average,
+        consensus: r.consensus === 1,
+        voterCount: r.voter_count,
+        createdAt: r.created_at,
+        votes: votesByRound[r.id] ?? [],
+      })),
+    };
+
+    return Response.json(payload);
+  } catch (e) {
+    return Response.json({ roomId, rounds: [], error: String(e) }, { status: 200 });
+  }
+}

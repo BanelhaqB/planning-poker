@@ -5,6 +5,9 @@
  * WebSocket. Uses the WebSocket Hibernation API so the DO costs nothing while
  * idle (no billed wall-clock time when nobody is sending messages).
  *
+ * Live state lives in the DO; permanent history (rooms / rounds / votes) is
+ * written to D1 (env.DB) at each reveal so it can be queried later.
+ *
  * State shape (persisted in DO storage so a room survives hibernation/eviction):
  *   {
  *     scale:    string[]      // the voting scale, e.g. ["1","2","3","5","8","?"]
@@ -15,6 +18,10 @@
  * Per-connection state lives on the socket via serializeAttachment:
  *   { id, name, spectator, vote }
  */
+
+export interface RoomEnv {
+  DB: D1Database;
+}
 
 interface Member {
   id: string;
@@ -45,17 +52,22 @@ type ClientMsg =
 
 export class Room implements DurableObject {
   private state: DurableObjectState;
+  private env: RoomEnv;
   private room!: RoomState;
+  private roomId = "";
   private loaded = false;
 
-  constructor(state: DurableObjectState) {
+  constructor(state: DurableObjectState, env: RoomEnv) {
     this.state = state;
+    this.env = env;
   }
 
   private async load(): Promise<void> {
     if (this.loaded) return;
     const stored = await this.state.storage.get<RoomState>("room");
     this.room = stored ?? { scale: DEFAULT_SCALE, revealed: false, topic: "" };
+    const savedId = await this.state.storage.get<string>("roomId");
+    if (savedId) this.roomId = savedId;
     this.loaded = true;
   }
 
@@ -68,6 +80,13 @@ export class Room implements DurableObject {
       return new Response("Expected WebSocket", { status: 426 });
     }
     await this.load();
+
+    // Capture the room name from the URL so the DO can tag its D1 rows.
+    const m = new URL(request.url).pathname.match(/\/api\/room\/([^/]+)\/ws$/);
+    if (m && !this.roomId) {
+      this.roomId = decodeURIComponent(m[1]);
+      await this.state.storage.put("roomId", this.roomId);
+    }
 
     const pair = new WebSocketPair();
     const [client, server] = [pair[0], pair[1]];
@@ -106,6 +125,7 @@ export class Room implements DurableObject {
         me.spectator = !!msg.spectator;
         me.vote = null;
         ws.serializeAttachment(me);
+        this.touchRoom();
         break;
 
       case "rename":
@@ -129,6 +149,7 @@ export class Room implements DurableObject {
       case "reveal":
         this.room.revealed = true;
         await this.save();
+        await this.persistRound();
         break;
 
       case "reset":
@@ -170,7 +191,27 @@ export class Room implements DurableObject {
     this.broadcastState();
   }
 
-  // ---- Helpers --------------------------------------------------------------
+  // ---- Members / stats ------------------------------------------------------
+
+  private members(): Member[] {
+    const list: Member[] = [];
+    for (const ws of this.state.getWebSockets()) {
+      const m = ws.deserializeAttachment() as Member | null;
+      if (m && m.name) list.push(m);
+    }
+    return list;
+  }
+
+  private computeStats(voters: Member[]): { average: number | null; consensus: boolean } {
+    const votesIn = voters.filter((m) => m.vote !== null).length;
+    const numeric = voters.map((m) => Number(m.vote)).filter((n) => Number.isFinite(n));
+    const average =
+      numeric.length > 0 ? numeric.reduce((a, b) => a + b, 0) / numeric.length : null;
+    const cast = voters.filter((m) => m.vote !== null).map((m) => m.vote);
+    // True unanimity: at least 2 voters, everyone voted, all the same value.
+    const consensus = voters.length > 1 && votesIn === voters.length && new Set(cast).size === 1;
+    return { average, consensus };
+  }
 
   private clearAllVotes(): void {
     for (const ws of this.state.getWebSockets()) {
@@ -182,37 +223,83 @@ export class Room implements DurableObject {
     }
   }
 
+  // ---- D1 persistence -------------------------------------------------------
+
+  /** Upsert the room row (created_at once, last_active refreshed). */
+  private touchRoom(): void {
+    if (!this.roomId) return;
+    const now = Date.now();
+    this.state.waitUntil(
+      this.env.DB.prepare(
+        `INSERT INTO rooms (id, created_at, last_active) VALUES (?, ?, ?)
+         ON CONFLICT(id) DO UPDATE SET last_active = excluded.last_active`,
+      )
+        .bind(this.roomId, now, now)
+        .run()
+        .catch((e) => console.error("touchRoom failed", e)),
+    );
+  }
+
+  /** Write a finished round (topic, stats) and its votes to D1. */
+  private async persistRound(): Promise<void> {
+    if (!this.roomId) return;
+    const voters = this.members().filter((m) => !m.spectator);
+    const cast = voters.filter((m) => m.vote !== null);
+    if (cast.length === 0) return; // nothing to record
+
+    const { average, consensus } = this.computeStats(voters);
+    const roundId = crypto.randomUUID();
+    const now = Date.now();
+
+    const statements = [
+      this.env.DB.prepare(
+        `INSERT INTO rooms (id, created_at, last_active) VALUES (?, ?, ?)
+         ON CONFLICT(id) DO UPDATE SET last_active = excluded.last_active`,
+      ).bind(this.roomId, now, now),
+      this.env.DB.prepare(
+        `INSERT INTO rounds (id, room_id, topic, scale, average, consensus, voter_count, created_at)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+      ).bind(
+        roundId,
+        this.roomId,
+        this.room.topic || null,
+        JSON.stringify(this.room.scale),
+        average,
+        consensus ? 1 : 0,
+        voters.length,
+        now,
+      ),
+      ...cast.map((m) =>
+        this.env.DB.prepare(
+          `INSERT INTO votes (round_id, voter_name, value) VALUES (?, ?, ?)`,
+        ).bind(roundId, m.name, m.vote as string),
+      ),
+    ];
+
+    try {
+      await this.env.DB.batch(statements);
+    } catch (e) {
+      console.error("persistRound failed", e);
+    }
+  }
+
+  // ---- Broadcast ------------------------------------------------------------
+
   private broadcastState(): void {
     const sockets = this.state.getWebSockets();
-    const members: Member[] = [];
-    for (const ws of sockets) {
-      const m = ws.deserializeAttachment() as Member | null;
-      if (m && m.name) members.push(m);
-    }
+    const members = this.members();
 
     const revealed = this.room.revealed;
     const voters = members.filter((m) => !m.spectator);
     const votesIn = voters.filter((m) => m.vote !== null).length;
 
-    // Consensus / average is only computed once revealed.
     let stats: { average: string | null; consensus: boolean } = {
       average: null,
       consensus: false,
     };
     if (revealed) {
-      const numeric = voters
-        .map((m) => Number(m.vote))
-        .filter((n) => Number.isFinite(n));
-      if (numeric.length > 0) {
-        const avg = numeric.reduce((a, b) => a + b, 0) / numeric.length;
-        stats.average = avg.toFixed(1);
-      }
-      // True unanimity: at least 2 voters, everyone has voted, all the same value.
-      const cast = voters.filter((m) => m.vote !== null).map((m) => m.vote);
-      stats.consensus =
-        voters.length > 1 &&
-        votesIn === voters.length &&
-        new Set(cast).size === 1;
+      const { average, consensus } = this.computeStats(voters);
+      stats = { average: average !== null ? average.toFixed(1) : null, consensus };
     }
 
     const payload = JSON.stringify({
