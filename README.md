@@ -1,34 +1,47 @@
 # Planning Poker
 
-A lightweight planning poker app on **Cloudflare Workers + Durable Objects**.
-No build step — one Worker, one Durable Object per room, WebSockets for real-time
-sync, and a free D1 database for history.
+A lightweight, real-time **planning poker** app on **Cloudflare Workers +
+Durable Objects**, with a free **D1** database for history and an SEO landing
+page. No build step, no framework.
 
 ## Features
 
+- Free, no sign-up, no ads, no tracking, open-source
 - Create / join rooms by code (shareable `/room/<id>` links)
 - Voters and spectators
-- Custom voting scales (Fibonacci, T-shirt, powers of 2… or your own)
+- Custom voting scales (default **Fibonacci Lite** `1 3 5 8 13`, plus Fibonacci,
+  T-shirt, powers of two… or your own)
 - Live vote status, 3-2-1 reveal countdown, average + unanimity detection with confetti
 - New round / reset
 - Persistent history (rooms, rounds, votes) in Cloudflare D1, browsable per room
-- Sober, single-file UI (no framework, no dependencies)
+- SEO landing page with meta/OG tags, JSON-LD and FAQ
 
 ## Architecture
 
 ```
 Browser ──WebSocket─►  Worker (src/index.ts)  ──►  Room Durable Object (src/room.ts)
-                                                     • holds live room state
-                                                     • holds every participant socket
-                                                     • broadcasts state on every change
+                                                     • live room state
+                                                     • all participant sockets
+                                                     • broadcasts state on change
                                                      • writes finished rounds to D1
-public/index.html  ← served as a static asset by the Worker
-D1 (SQLite)        ← rooms / rounds / votes history, read via /api/room/:id/history
+public/index.html  ← SEO landing (served at /)
+public/app.html    ← the poker app (served at /app and /room/<id>)
+D1 (SQLite)        ← rooms / rounds / votes, read via /api/room/:id/history
 ```
 
 One room = one Durable Object instance (`idFromName(roomId)`), so all
-participants of a room share the same in-memory state. The WebSocket
-**Hibernation API** means the room costs nothing while idle.
+participants share the same in-memory state. The WebSocket **Hibernation API**
+means a room costs nothing while idle.
+
+## Pages & routes
+
+- `/` → **SEO landing page** (`public/index.html`) — indexed by search engines.
+- `/app` and `/room/<id>` → **the poker app** (`public/app.html`).
+- `/api/room/:id/ws` → WebSocket to the Room DO.
+- `/api/room/:id/history` → round/vote history from D1.
+
+> **Before going live**, replace `https://your-domain.com` with your real domain
+> in `public/index.html`, `public/sitemap.xml` and `public/robots.txt`.
 
 ## Persistence (Cloudflare D1)
 
@@ -53,6 +66,7 @@ The frontend reads them back via `GET /api/room/:id/history` (the **History** bu
 ```bash
 npm install
 npm run dev        # wrangler dev — opens http://localhost:8787
+npm run typecheck  # tsc --noEmit
 ```
 
 Open two browser windows on the same room code to see live sync.
@@ -65,16 +79,23 @@ npm run deploy
 ```
 
 Durable Objects and D1 are included in the Workers **Free** plan, so this deploys
-and runs at no cost for small teams.
+and runs at no cost for small teams. Auto-deploy on push to `main` is configured
+in `.github/workflows/deploy.yml` (needs the `CLOUDFLARE_API_TOKEN` and
+`CLOUDFLARE_ACCOUNT_ID` repo secrets).
 
 ## Project layout
 
 ```
 wrangler.toml        Worker + Durable Object + D1 config
 schema.sql           D1 tables (rooms, rounds, votes)
-src/index.ts         Worker entry: WS routing, history API, static assets
+src/index.ts         Worker entry: routing (WS, history, app, static)
 src/room.ts          Room Durable Object (state, voting, broadcast, D1 writes)
-public/index.html    Frontend (HTML + CSS + JS, single file)
+public/index.html    SEO landing page
+public/app.html      The poker app (HTML + CSS + JS, single file)
+public/robots.txt    Crawler directives + sitemap link
+public/sitemap.xml   Sitemap
+public/og-image.png  Social share image (1200x630)
+public/favicon.svg   Favicon
 ```
 
 ## WebSocket protocol
