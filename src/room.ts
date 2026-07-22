@@ -207,8 +207,12 @@ export class Room implements DurableObject {
         const avg = numeric.reduce((a, b) => a + b, 0) / numeric.length;
         stats.average = avg.toFixed(1);
       }
+      // True unanimity: at least 2 voters, everyone has voted, all the same value.
       const cast = voters.filter((m) => m.vote !== null).map((m) => m.vote);
-      stats.consensus = cast.length > 1 && new Set(cast).size === 1;
+      stats.consensus =
+        voters.length > 1 &&
+        votesIn === voters.length &&
+        new Set(cast).size === 1;
     }
 
     const payload = JSON.stringify({
