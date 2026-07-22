@@ -29,7 +29,8 @@ interface RoomState {
   topic: string;
 }
 
-const DEFAULT_SCALE = ["0", "1", "2", "3", "5", "8", "13", "21", "?", "☕"];
+// "Fibonacci Lite" — the essential Fibonacci steps, no extremes.
+const DEFAULT_SCALE = ["1", "3", "5", "8", "13"];
 
 // Messages the client can send.
 type ClientMsg =
