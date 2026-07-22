@@ -22,4 +22,4 @@ new_sqlite_classes = ["Room"]
 [[d1_databases]]
 binding = "DB"
 database_name = "planning-poker"
-database_id = "REPLACE_WITH_YOUR_D1_DATABASE_ID"
+database_id = "7d221b8d-b7b8-461c-8c48-428080007098"
