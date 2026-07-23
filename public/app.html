@@ -297,14 +297,16 @@
 <!-- Landing -->
 <div class="landing" id="landing">
   <div class="card-panel">
-    <h1>Planning Poker</h1>
-    <p class="sub">Estimate together. No sign-up, no clutter.</p>
+    <h1 id="panelTitle">Planning Poker</h1>
+    <p class="sub" id="panelSub">Estimate together. No sign-up, no clutter.</p>
 
     <label for="name">Your name</label>
     <input type="text" id="name" placeholder="e.g. Bilel" maxlength="40" autocomplete="off" />
 
-    <label for="roomInput">Room</label>
-    <input type="text" id="roomInput" placeholder="Room code (blank = new room)" maxlength="64" autocomplete="off" />
+    <div id="roomField">
+      <label for="roomInput">Room</label>
+      <input type="text" id="roomInput" placeholder="Room code (blank = new room)" maxlength="64" autocomplete="off" />
+    </div>
 
     <label class="check">
       <input type="checkbox" id="spectator" /> Join as spectator (watch, don't vote)
@@ -405,9 +407,16 @@
     return Math.random().toString(36).slice(2, 8);
   }
 
-  // Prefill room code if arriving via a shared link.
+  // Arriving via a shared /room/<id> link → show a focused "join" screen.
   const urlRoom = currentRoomFromUrl();
-  if (urlRoom) $("roomInput").value = urlRoom;
+  if (urlRoom) {
+    $("roomInput").value = urlRoom;
+    $("roomField").classList.add("hidden");        // room is known from the link
+    $("panelTitle").textContent = "Join room";
+    $("panelSub").textContent = "Room " + urlRoom + " · enter your name to join.";
+    $("enterBtn").textContent = "Join room";
+    setTimeout(() => $("name").focus(), 50);
+  }
 
   // ---- Landing ----
   $("enterBtn").addEventListener("click", enter);
@@ -457,6 +466,8 @@
   let lastState = null;
   let revealAnimating = false;
 
+  // Entry point for every state message: handles the reveal countdown,
+  // then delegates the actual DOM drawing to paint().
   function render(s) {
     const justRevealed = !lastRevealed && s.revealed;
     const newRound = lastRevealed && !s.revealed;
@@ -466,8 +477,8 @@
     if (newRound) { myVote = null; revealAnimating = false; }
 
     if (justRevealed) {
-      startRevealCountdown();
-      paint(s);
+      startRevealCountdown();   // 3-2-1, then reveal + celebrate
+      paint(s);                 // keep cards face-down during the count
       return;
     }
     paint(s);
@@ -484,7 +495,7 @@
     const tick = () => {
       numEl.textContent = n;
       numEl.classList.remove("pop");
-      void numEl.offsetWidth;
+      void numEl.offsetWidth; // restart the animation
       numEl.classList.add("pop");
 
       if (n === 1) {
@@ -506,6 +517,7 @@
     currentScale = s.scale;
     const revealed = s.revealed && !revealAnimating;
 
+    // Members / seats
     const seats = $("members");
     seats.innerHTML = "";
     s.members.forEach((m) => {
@@ -536,9 +548,11 @@
       seats.appendChild(seat);
     });
 
+    // Topic (don't clobber while user is typing)
     const topicEl = $("topicInput");
     if (document.activeElement !== topicEl) topicEl.value = s.topic;
 
+    // Center table
     const center = $("center");
     center.innerHTML = "";
     if (revealAnimating) {
@@ -611,6 +625,7 @@
     });
   }
 
+  // ---- Celebration (unanimity) ----
   function celebrate() {
     const banner = $("celebrateBanner");
     banner.classList.remove("show");
@@ -635,6 +650,7 @@
     }
   }
 
+  // ---- Top bar actions ----
   $("topicInput").addEventListener("change", (e) => {
     send({ type: "set_topic", topic: e.target.value });
   });
@@ -659,6 +675,7 @@
     }
   });
 
+  // ---- Scale modal ----
   const scaleModal = $("scaleModal");
   $("scaleBtn").addEventListener("click", () => {
     $("scaleInput").value = currentScale.join(", ");
@@ -684,6 +701,7 @@
     presetsEl.appendChild(b);
   });
 
+  // ---- History modal ----
   const historyModal = $("historyModal");
   $("historyBtn").addEventListener("click", openHistory);
   $("historyClose").addEventListener("click", () => historyModal.classList.add("hidden"));
@@ -759,6 +777,7 @@
       ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
   }
 
+  // ---- Toast ----
   let toastTimer = null;
   function toast(text) {
     const t = $("toast");
