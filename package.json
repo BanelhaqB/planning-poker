@@ -1,7 +1,7 @@
 {
   "name": "planning-poker",
   "version": "1.0.0",
-  "description": "Lightweight planning poker on Cloudflare Workers + Durable Objects",
+  "description": "Lightweight poker sizing on Cloudflare Workers + Durable Objects",
   "private": true,
   "scripts": {
     "dev": "wrangler dev",

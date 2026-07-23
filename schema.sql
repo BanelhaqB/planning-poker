@@ -1,4 +1,4 @@
--- D1 schema for Planning Poker history.
+-- D1 schema for Poker Sizing history.
 -- Apply locally:  wrangler d1 execute planning-poker --local --file=./schema.sql
 -- Apply remote:   wrangler d1 execute planning-poker --remote --file=./schema.sql
 
