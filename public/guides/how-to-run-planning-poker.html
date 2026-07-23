@@ -1,0 +1,159 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>How to Run a Planning Poker Session (Step by Step) | Poker Sizing</title>
+<meta name="description" content="A step-by-step guide to running a planning poker session for in-person and remote agile teams: setup, roles, voting, reveal, and facilitation tips." />
+<link rel="canonical" href="https://your-domain.com/guides/how-to-run-planning-poker" />
+<meta name="robots" content="index, follow" />
+<meta property="og:type" content="article" />
+<meta property="og:site_name" content="Poker Sizing" />
+<meta property="og:title" content="How to Run a Planning Poker Session (Step by Step)" />
+<meta property="og:description" content="A step-by-step guide to running a planning poker session for in-person and remote agile teams." />
+<meta property="og:url" content="https://your-domain.com/guides/how-to-run-planning-poker" />
+<meta property="og:image" content="https://your-domain.com/og-image.png" />
+<link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "HowTo",
+  "name": "How to run a planning poker session",
+  "description": "A step-by-step guide to running a planning poker session for agile teams.",
+  "step": [
+    { "@type": "HowToStep", "position": 1, "name": "Prepare the backlog", "text": "Pick the backlog items to estimate and make sure each has a clear description and acceptance criteria." },
+    { "@type": "HowToStep", "position": 2, "name": "Gather the team and pick a scale", "text": "Invite everyone who will do the work and agree on a voting scale such as Fibonacci." },
+    { "@type": "HowToStep", "position": 3, "name": "Discuss one item", "text": "Read the item aloud and let the team ask clarifying questions." },
+    { "@type": "HowToStep", "position": 4, "name": "Vote privately", "text": "Each member selects a card representing their estimate without revealing it." },
+    { "@type": "HowToStep", "position": 5, "name": "Reveal together", "text": "Everyone reveals at the same time to avoid anchoring." },
+    { "@type": "HowToStep", "position": 6, "name": "Discuss and re-vote", "text": "The highest and lowest voters explain, then re-vote until the team converges." }
+  ]
+}
+</script>
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    { "@type": "ListItem", "position": 1, "name": "Home", "item": "https://your-domain.com/" },
+    { "@type": "ListItem", "position": 2, "name": "Guides", "item": "https://your-domain.com/guides" },
+    { "@type": "ListItem", "position": 3, "name": "How to Run a Planning Poker Session", "item": "https://your-domain.com/guides/how-to-run-planning-poker" }
+  ]
+}
+</script>
+<style>
+  :root{--bg:#f4f5f7;--surface:#fff;--border:#e4e6eb;--text:#1c1e21;--muted:#6b7280;--accent:#3b5bdb;--accent-soft:#eef1fd;--green:#2f9e6b}
+  *{box-sizing:border-box}html{scroll-behavior:smooth}
+  body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;background:var(--bg);color:var(--text);line-height:1.7}
+  a{color:var(--accent);text-decoration:none}a:hover{text-decoration:underline}
+  .wrap{max-width:760px;margin:0 auto;padding:0 20px}
+  header.nav{background:var(--surface);border-bottom:1px solid var(--border);position:sticky;top:0;z-index:10}
+  .nav-inner{display:flex;align-items:center;gap:16px;height:60px;max-width:960px;margin:0 auto;padding:0 20px}
+  .brand{font-weight:700;font-size:16px;color:var(--text)}.brand span{color:var(--accent)}
+  .nav .spacer{flex:1}.navlink{color:var(--muted);font-size:14px;font-weight:550}.navlink:hover{color:var(--text);text-decoration:none}
+  .btn{display:inline-block;border:none;border-radius:9px;padding:11px 20px;font-size:14px;font-weight:650;background:var(--accent);color:#fff}
+  .btn:hover{background:#2f4bc4;text-decoration:none}
+  .crumbs{font-size:13px;color:var(--muted);padding:20px 0 0}
+  article{padding:8px 0 20px}
+  article h1{font-size:34px;line-height:1.15;letter-spacing:-.02em;margin:14px 0 8px}
+  .meta{color:var(--muted);font-size:14px;margin-bottom:24px}
+  article h2{font-size:23px;margin:34px 0 10px;letter-spacing:-.01em}
+  article h3{font-size:18px;margin:24px 0 6px}
+  article p,article li{font-size:16.5px;color:#2b2d31}
+  article ul,article ol{padding-left:22px}article li{margin:8px 0}
+  .lead{font-size:19px;color:var(--muted)}
+  .cta-box{background:var(--accent-soft);border:1px solid #dfe4fb;border-radius:14px;padding:22px 24px;margin:30px 0;text-align:center}
+  .cta-box p{margin:0 0 14px;font-size:16px}
+  .related{border-top:1px solid var(--border);padding:26px 0 0;margin-top:30px}
+  .related h2{font-size:18px;margin:0 0 10px}.related a{display:block;padding:4px 0}
+  footer{background:var(--surface);border-top:1px solid var(--border);padding:28px 0;color:var(--muted);font-size:13.5px;margin-top:20px}
+  .foot-inner{max-width:960px;margin:0 auto;padding:0 20px;display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap}
+  footer a{color:var(--muted)}
+  @media(max-width:720px){article h1{font-size:27px}}
+</style>
+</head>
+<body>
+<header class="nav">
+  <div class="nav-inner">
+    <a class="brand" href="/">♠ Poker<span>Sizing</span></a>
+    <div class="spacer"></div>
+    <a class="navlink" href="/guides">Guides</a>
+    <a class="btn" href="/app">Start a session</a>
+  </div>
+</header>
+
+<main class="wrap">
+  <div class="crumbs"><a href="/">Home</a> › <a href="/guides">Guides</a> › How to Run a Planning Poker Session</div>
+  <article>
+    <h1>How to Run a Planning Poker Session</h1>
+    <p class="meta">A practical, step-by-step facilitation guide for in-person and remote teams.</p>
+
+    <p class="lead">
+      Running planning poker well is mostly about good facilitation. Here's a simple
+      six-step process that keeps sessions fast, fair and focused — whether your team is
+      in one room or spread across time zones.
+    </p>
+
+    <h2>Before the session</h2>
+    <ul>
+      <li><strong>Groom the backlog.</strong> Each item you plan to estimate should have a clear description and acceptance criteria. Vague items produce vague estimates.</li>
+      <li><strong>Invite the right people.</strong> Only those who will actually do the work should vote. Stakeholders can join as spectators.</li>
+      <li><strong>Pick a scale.</strong> Fibonacci is the default; see our <a href="/guides/planning-poker-cards">guide to cards and scales</a> to choose.</li>
+      <li><strong>Set a reference item.</strong> Agree on one small, well-understood item and call it a "2" (or a "3"). Everything else is estimated relative to it.</li>
+    </ul>
+
+    <h2>The six-step loop</h2>
+    <ol>
+      <li><strong>Present the item.</strong> The product owner reads it aloud and answers questions.</li>
+      <li><strong>Discuss briefly.</strong> Clarify scope and edge cases — but time-box it to a minute or two.</li>
+      <li><strong>Vote privately.</strong> Everyone selects a card without showing it, so no one is anchored.</li>
+      <li><strong>Reveal together.</strong> All cards flip at once.</li>
+      <li><strong>Discuss outliers.</strong> The highest and lowest voters explain their thinking. This is where hidden complexity surfaces.</li>
+      <li><strong>Re-vote.</strong> Repeat until the team converges. Record the agreed estimate and move to the next item.</li>
+    </ol>
+
+    <div class="cta-box">
+      <p>Skip the physical cards — run it online with your whole team.</p>
+      <a class="btn" href="/app">Start a free planning poker session</a>
+    </div>
+
+    <h2>Running planning poker remotely</h2>
+    <p>
+      For distributed teams, a shared online tool replaces the physical deck. Everyone joins
+      the same room from a link, picks a card on their own screen, and the cards reveal
+      simultaneously for all — preserving the anti-anchoring benefit. Look for these features:
+    </p>
+    <ul>
+      <li>Instant rooms with a shareable link and no sign-up.</li>
+      <li>A synchronized reveal so nobody sees votes early.</li>
+      <li>Spectator mode for facilitators and stakeholders.</li>
+      <li>Custom scales and a visible average or consensus after the reveal.</li>
+    </ul>
+    <p><a href="/">Poker Sizing</a> does all of this for free.</p>
+
+    <h2>Facilitation tips</h2>
+    <ul>
+      <li><strong>Keep it moving.</strong> If an item triggers a long debate, split it or park it rather than stalling the session.</li>
+      <li><strong>Estimate effort, not time.</strong> Points capture complexity, uncertainty and volume — not hours. See <a href="/guides/story-points">story points explained</a>.</li>
+      <li><strong>Watch for big spreads.</strong> A 2 next to a 13 is a signal the item isn't understood the same way by everyone.</li>
+      <li><strong>Don't average the votes.</strong> Discuss and converge; averaging hides disagreement.</li>
+      <li><strong>Re-estimate rarely.</strong> Once an item is sized and understood, avoid re-litigating it.</li>
+    </ul>
+
+    <div class="related">
+      <h2>Keep reading</h2>
+      <a href="/guides/what-is-planning-poker">→ What is planning poker?</a>
+      <a href="/guides/story-points">→ Story points explained</a>
+      <a href="/guides/planning-poker-cards">→ Planning poker cards &amp; scales</a>
+    </div>
+  </article>
+</main>
+
+<footer>
+  <div class="foot-inner">
+    <div>♠ Poker Sizing — free, open-source planning poker for agile teams.</div>
+    <div><a href="/">Home</a> · <a href="/guides">Guides</a> · <a href="/app">Launch app</a></div>
+  </div>
+</footer>
+</body>
+</html>
