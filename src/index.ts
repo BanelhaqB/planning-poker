@@ -39,7 +39,7 @@ export default {
       url.pathname === "/app" ||
       new RegExp(`^/room/(${ROOM_ID})$`).test(url.pathname);
     if (isAppRoute) {
-      return env.ASSETS.fetch(new Request(new URL("/app.html", url), request));
+      return env.ASSETS.fetch(new Request(new URL("/app", url), request));
     }
 
     // Everything else -> static assets (SEO landing at /, robots, sitemap, …).
