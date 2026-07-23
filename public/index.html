@@ -197,6 +197,13 @@
   details[open] summary::after { content: "−"; }
   details p { margin: 0 0 16px; color: var(--muted); font-size: 14.5px; }
 
+  /* Guides */
+  .guide-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; max-width: 760px; margin: 0 auto; }
+  .guide-grid a { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 16px 18px; color: var(--text); }
+  .guide-grid a:hover { border-color: var(--accent); text-decoration: none; }
+  .guide-grid b { display: block; font-size: 15px; margin-bottom: 3px; }
+  .guide-grid span { color: var(--muted); font-size: 13.5px; }
+
   /* Final CTA */
   .cta-band { text-align: center; }
   .cta-band h2 { margin-bottom: 8px; }
@@ -209,7 +216,7 @@
 
   @media (max-width: 720px) {
     .hero h1 { font-size: 32px; }
-    .steps, .features { grid-template-columns: 1fr; }
+    .steps, .features, .guide-grid { grid-template-columns: 1fr; }
     h2 { font-size: 24px; }
   }
 </style>
@@ -222,6 +229,7 @@
     <div class="spacer"></div>
     <a class="navlink" href="#how">How it works</a>
     <a class="navlink" href="#features">Features</a>
+    <a class="navlink" href="/guides">Guides</a>
     <a class="navlink" href="#faq">FAQ</a>
     <a class="btn" href="/app">Start a session</a>
   </div>
@@ -403,6 +411,23 @@
     </div>
   </section>
 
+  <!-- Guides -->
+  <section id="guides">
+    <div class="wrap">
+      <h2>Learn planning poker</h2>
+      <p class="sec-lead">Free guides on agile estimation, story points and running great sessions.</p>
+      <div class="guide-grid">
+        <a href="/guides/what-is-planning-poker"><b>What is planning poker?</b><span>A complete beginner's guide.</span></a>
+        <a href="/guides/how-to-run-planning-poker"><b>How to run a session</b><span>Step-by-step facilitation guide.</span></a>
+        <a href="/guides/story-points"><b>Story points explained</b><span>What they are and how to use them.</span></a>
+        <a href="/guides/planning-poker-cards"><b>Cards &amp; scales</b><span>Fibonacci, T-shirt sizes and more.</span></a>
+      </div>
+      <div style="text-align:center; margin-top:24px;">
+        <a class="navlink" href="/guides" style="font-weight:650;">Browse all guides →</a>
+      </div>
+    </div>
+  </section>
+
   <!-- Final CTA -->
   <section class="cta-band">
     <div class="wrap">
@@ -418,6 +443,7 @@
     <div>♠ Poker Sizing — free, open-source planning poker for agile teams.</div>
     <div>
       <a href="/app">Launch app</a> ·
+      <a href="/guides">Guides</a> ·
       <a href="https://github.com/BanelhaqB/planning-poker" rel="noopener">GitHub</a>
     </div>
   </div>
