@@ -1,6 +1,6 @@
-# Planning Poker
+# Poker Sizing
 
-A lightweight, real-time **planning poker** app on **Cloudflare Workers +
+A lightweight, real-time **poker sizing** app on **Cloudflare Workers +
 Durable Objects**, with a free **D1** database for history and an SEO landing
 page. No build step, no framework.
 
@@ -25,7 +25,7 @@ Browser ──WebSocket─►  Worker (src/index.ts)  ──►  Room Durable Ob
                                                      • broadcasts state on change
                                                      • writes finished rounds to D1
 public/index.html  ← SEO landing (served at /)
-public/app.html    ← the poker app (served at /app and /room/<id>)
+public/app.html    ← the app (served at /app and /room/<id>)
 D1 (SQLite)        ← rooms / rounds / votes, read via /api/room/:id/history
 ```
 
@@ -36,7 +36,7 @@ means a room costs nothing while idle.
 ## Pages & routes
 
 - `/` → **SEO landing page** (`public/index.html`) — indexed by search engines.
-- `/app` and `/room/<id>` → **the poker app** (`public/app.html`).
+- `/app` and `/room/<id>` → **the app** (`public/app.html`).
 - `/api/room/:id/ws` → WebSocket to the Room DO.
 - `/api/room/:id/history` → round/vote history from D1.
 
@@ -91,7 +91,7 @@ schema.sql           D1 tables (rooms, rounds, votes)
 src/index.ts         Worker entry: routing (WS, history, app, static)
 src/room.ts          Room Durable Object (state, voting, broadcast, D1 writes)
 public/index.html    SEO landing page
-public/app.html      The poker app (HTML + CSS + JS, single file)
+public/app.html      The app (HTML + CSS + JS, single file)
 public/robots.txt    Crawler directives + sitemap link
 public/sitemap.xml   Sitemap
 public/og-image.png  Social share image (1200x630)
